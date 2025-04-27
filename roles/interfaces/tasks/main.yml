@@ -1,0 +1,24 @@
+---
+- name: "Ensure required packages for network configuration are present"
+  ansible.builtin.package:
+    name: "{{ interfaces_packages }}"
+    state: present
+    update_cache: true
+  tags: interfaces
+
+- name: "Configure network interfaces"
+  ansible.builtin.template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart networking
+  tags: interfaces
+
+- name: "Ensure networking is enabled and started"
+  ansible.builtin.service:
+    name: networking
+    state: started
+    enabled: true
+  tags: interfaces

@@ -1,0 +1,23 @@
+---
+users: {}
+
+# users:
+#   - name: "litsadmin"
+#     fullname: "LITS Admin"
+#     authorized_keys:
+#       - "{{ lookup('file', 'files/sshkeys/id_rsa_litsadmin.pub') }}"
+#     cmd: "ALL=(ALL) NOPASSWD:ALL"
+#     state: present
+#     sudo: true
+#     system_account: false
+#     bash_files:
+#       - name: ../files/bashrc/ms.sh
+#         mode: '0755'
+#       - name: ../files/bashrc/tmux.conf
+#         mode: '0644'
+#       - name: ../files/bashrc/vimrc
+#         mode: '0644'
+#       - name: ../files/bashrc/curlrc
+#         mode: '0644'
+#       - name: ../files/bashrc/wgetrc
+#         mode: '0644'

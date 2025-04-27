@@ -1,0 +1,27 @@
+#!/bin/sh
+
+printf "  \n"
+printf "  Welcome to $(cat /etc/redhat-release) ($(uname -m))\n"
+printf "    FQDN:   {{ ansible_hostname }}{{ '.' + ansible_domain if ansible_domain is defined and ansible_domain != '' else '' }}\n"
+printf "    Type:   {{ ansible_virtualization_type if ansible_virtualization_role == 'guest' else 'physical' }}\n"
+{% if not ansible_virtualization_type == 'lxc' %}
+printf "    Kernel: $(uname -sr)\n"
+printf "    CPUs:   {{ ansible_processor_vcpus }} Core\n"
+{% endif %}
+printf "    RAM:    {{ (ansible_memtotal_mb / 1024) | round | int }} GB\n"
+printf "    IPv4:   {{ ansible_default_ipv4.address }}\n"
+{% if ansible_default_ipv6 is defined and ansible_default_ipv6 | length > 0 %}
+printf "    IPv6:   {{ ansible_default_ipv6.address | default('-') }}\n"
+{% endif %}
+printf "  \n"
+{% if host_description is defined and host_description | length > 0 %}
+printf "  Description: {{ host_description }}\n"
+printf "  \n"
+{% endif %}
+{% if host_responsible is defined and host_responsible | length > 0 %}
+printf "  Responsible: {{ host_responsible }}\n"
+printf "  \n"
+{% endif %}
+printf "    Last deployment: {{ ansible_date_time.date }} {{ ansible_date_time.time }} {{ ansible_date_time.tz }}\n"
+printf "    System uptime: $(uptime -p)\n"
+printf "  \n"

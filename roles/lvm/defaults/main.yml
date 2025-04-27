@@ -1,0 +1,22 @@
+defaults_lvm_config: []
+  # - vg: system
+  #   pv: /dev/vda
+  #   logical_volumes:
+  #     - lv: root
+  #       size: 10G
+  #       mount: /
+  #       fs_type: xfs
+  #       opts: "defaults"
+  #     - lv: log
+  #       size: 3G
+  #       mount: /var/log
+  #       fs_type: xfs
+  #       opts: "noatime"
+  # - vg: content
+  #   pv: /dev/sdb
+  #   logical_volumes:
+  #     - lv: data
+  #       size: 100%
+  #       mount: /data
+  #       fs_type: xfs
+  #       opts: "defaults"

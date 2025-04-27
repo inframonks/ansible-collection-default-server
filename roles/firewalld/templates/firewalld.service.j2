@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>{{ item.service }}</short>
+  <description>{{ item.description }}</description>
+{% for entry in item.ports %}
+  <port protocol="{{ entry.protocol }}" port="{{ entry.port }}"></port>
+{% endfor %}
+</service>

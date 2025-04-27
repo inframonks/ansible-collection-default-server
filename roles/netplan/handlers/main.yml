@@ -1,0 +1,13 @@
+---
+- name: "Apply netplan config"
+  ansible.builtin.command:
+    cmd: "/usr/sbin/netplan apply"
+  listen: netplan apply config
+  tags: network
+
+- name: "Generate netplan config"
+  ansible.builtin.command:
+    cmd: "/usr/sbin/netplan generate"
+  listen: Generate netplan config
+  notify: Apply netplan config
+  tags: network

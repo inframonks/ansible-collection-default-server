@@ -1,0 +1,23 @@
+---
+- name: "Install required packages"
+  ansible.builtin.package:
+    name:
+      - yum-utils
+    state: present
+  tags: docker
+
+- name: "Add  repository"
+  ansible.builtin.command:
+    cmd: yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+  tags: docker
+
+- name: "Install packages"
+  ansible.builtin.package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  tags: docker

@@ -1,0 +1,87 @@
+---
+- name: "Install packages"
+  ansible.builtin.package:
+    state: present
+    name:
+      - realmd
+      - sssd
+      - sssd-tools
+      - samba-common
+      - krb5-user
+      - packagekit
+      - samba-common-bin
+      - samba-libs
+      - adcli
+      - chrony
+      - python3-pexpect
+      - python-pexpect
+  tags: sssd
+
+- name: "Configure realmd.conf"
+  ansible.builtin.template:
+    src: realmd.conf.j2
+    dest: /etc/realmd.conf
+    mode: "0644"
+    backup: true
+  notify: Restart sssd
+  tags: sssd
+
+- name: "Check if machine is joined the AD"
+  ansible.builtin.shell:
+    cmd: '/bin/bash -c "realm list | grep sssd"'
+  register: realmd_bound
+  changed_when: false
+  ignore_errors: true
+  tags: sssd
+
+- name: "Join system to AD and put the computer object defined OU"
+  ansible.builtin.expect:
+    command: '/bin/bash -c "/usr/sbin/realm --verbose join {{ domain_name }} -U {{ bind_user }}"'
+    responses:
+      Password for *: "{{ bind_password }}"
+  when: realmd_bound is failed and not squid_is_installed.stat.exists
+  register: debug_join_domain
+  tags: sssd
+
+- name: "Debug Join Domain Output"
+  ansible.builtin.debug:
+    var: debug_join_domain.stdout_lines
+  tags: sssd
+
+- name: "Fix sending sudo spam emails"
+  ansible.builtin.lineinfile:
+    path: /etc/sssd/sssd.conf
+    regexp: '^services ='
+    line: services = nss, pam, sudo, ssh
+  notify: restart sssd
+  tags: sssd
+
+- name: "Restrict access based on specific ad group"
+  ansible.builtin.command:
+    cmd: >
+      /bin/bash -c "/usr/sbin/realm -v deny --all && /usr/sbin/realm -v permit -g '{{ ad_group_allowd_ssh_and_sudo }}'
+      {% if ad_group_allowd_ssh_and_sudo_extra is defined %}'{{ ad_group_allowd_ssh_and_sudo_extra }}'{% endif %}
+      {% if ad_group_allowd_ssh is defined %}'{{ ad_group_allowd_ssh }}'{% endif %}"
+  register: debug_permit_groups
+  when: not squid_is_installed.stat.exists
+  tags: sssd
+
+- name: "Debug debug_permit_groups"
+  ansible.builtin.debug:
+    var: debug_permit_groups.stdout_lines
+  tags: sssd
+
+- name: "Configure sudoers file"
+  ansible.builtin.template:
+    src: sudoers_ad_group.j2
+    dest: /etc/sudoers.d/sudoers_ad_group
+    backup: true
+    mode: "0440"
+  tags: sssd
+
+- name: "Add pam_mkhomedir.so after pam_unix.so"
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-session
+    insertafter: 'pam_unix.so'
+    line: 'session required    pam_mkhomedir.so skel=/etc/skel/ umask=0077'
+  tags: sssd

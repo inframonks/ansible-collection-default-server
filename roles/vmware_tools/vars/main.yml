@@ -1,0 +1,3 @@
+---
+vmware_service_name: open-vm-tools
+vmware_package_name: open-vm-tools

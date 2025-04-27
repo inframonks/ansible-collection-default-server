@@ -1,0 +1,88 @@
+---
+- name: "Gather operating system variables"
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution_file_variety | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags: packages
+
+- name: "Combine packages_install from all sources"
+  ansible.builtin.set_fact:
+    packages_install: >-
+      {{
+        (defaults_packages_install       | default([])) +
+        (group_vars_packages_install     | default([])) +
+        (host_vars_packages_install      | default([])) +
+        (playbook_packages_install       | default([]))
+        | unique
+      }}
+  tags: packages
+
+- name: "Combine packages_install_epel from all sources"
+  ansible.builtin.set_fact:
+    packages_install_epel: >-
+      {{
+        (defaults_packages_install_epel   | default([])) +
+        (group_vars_packages_install_epel | default([])) +
+        (host_vars_packages_install_epel  | default([])) +
+        (playbook_packages_install_epel   | default([]))
+        | unique
+      }}
+  when: ansible_os_family == "RedHat"
+  tags: packages
+
+- name: "Combine packages_remove from all sources"
+  ansible.builtin.set_fact:
+    packages_remove: >-
+      {{
+        (defaults_packages_remove   | default([])) +
+        (group_vars_packages_remove | default([])) +
+        (host_vars_packages_remove  | default([])) +
+        (playbook_packages_remove   | default([]))
+        | unique
+      }}
+  tags: packages
+
+- name: "Install packages"
+  ansible.builtin.package:
+    name: "{{ packages_install }}"
+    state: present
+    update_cache: true
+  tags: packages
+
+- name: "Remove packages"
+  ansible.builtin.package:
+    name: "{{ packages_remove }}"
+    state: absent
+  tags: packages
+
+- name: "Install rhel epel repo"
+  ansible.builtin.package:
+    name: epel-release
+    state: present
+  environment: "{{ proxy_env }}"
+  when: packages_epel_release and ansible_os_family == "RedHat"
+  tags: packages
+
+- name: "Install rhel packages from epel repo"
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ packages_install_epel }}"
+  environment: "{{ proxy_env }}"
+  when: packages_epel_release and ansible_os_family == "RedHat"
+  tags: packages
+
+- name: "Remove rhel packages"
+  ansible.builtin.package:
+    name: "{{ packages_remove }}"
+    state: absent
+  when: ansible_os_family == "RedHat"
+  environment: "{{ proxy_env }}"
+  tags: packages

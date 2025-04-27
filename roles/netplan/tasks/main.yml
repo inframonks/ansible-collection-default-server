@@ -1,0 +1,38 @@
+---
+- name: "Install netplan packages"
+  ansible.builtin.package:
+    name: "{{ netplan_packages }}"
+    state: present
+  tags: netplan
+
+- name: "Wipe old configs"
+  when:
+    - netplan_config | length > 0
+    - netplan_enabled
+    - netplan_wipe
+  tags: netplan
+  block:
+
+    - name: "Collect existing netplan configs"
+      ansible.builtin.find:
+        paths: "{{ netplan_path }}"
+        patterns: "*.yaml,*.yml"
+      register: netplan_existing_configs
+      tags: netplan
+
+    - name: "Wipe existing netplan configs"
+      ansible.builtin.file:
+        path: "{{ item['path'] }}"
+        state: absent
+      with_items: "{{ netplan_existing_configs['files'] }}"
+      when: item['path'] != netplan_path + "/" + netplan_file
+      tags: netplan
+
+- name: "Configure netplan"
+  ansible.builtin.template:
+    src: templates/config.yaml.j2
+    dest: "{{ netplan_path }}/{{ netplan_file }}"
+    mode: '0644'
+  when: netplan_config != {}
+  notify: Generate netplan config
+  tags: netplan

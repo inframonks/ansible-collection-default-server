@@ -1,0 +1,6 @@
+---
+- name: "Reload ufw"
+  ansible.builtin.service:
+    name: ufw
+    state: restarted
+  tags: ufw

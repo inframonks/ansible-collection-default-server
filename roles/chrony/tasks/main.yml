@@ -1,0 +1,76 @@
+---
+- name: "Gather operating system variables"
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution_file_variety | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags: chrony
+
+- name: "Uninstall default time synchronization services"
+  ansible.builtin.package:
+    name: "{{ chrony_uninstall_packages }}"
+    state: absent
+  when: ansible_os_family == "Debian"
+  tags: chrony
+
+- name: "Stop and disable systemd-timesyncd on Debian-based systems"
+  ansible.builtin.service:
+    name: systemd-timesyncd
+    state: stopped
+    enabled: false
+  failed_when: false
+  when: ansible_os_family == "Debian"
+  tags: chrony
+
+- name: "Install package"
+  ansible.builtin.package:
+    name: "{{ chrony_package_name }}"
+    state: present
+  environment: "{{ proxy_env }}"
+  tags: chrony
+
+- name: "Configure service"
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: "{{ chrony_config_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+  tags: chrony
+
+- name: "Start and enable service"
+  ansible.builtin.service:
+    name: "{{ chrony_service_name }}"
+    state: started
+    enabled: true
+  tags: chrony
+
+- name: "Check current timezone"
+  ansible.builtin.command:
+    cmd: timedatectl show -p Timezone --value
+  register: __chrony_current_timezone
+  tags: chrony
+
+- name: "Configure timezone if not set"
+  community.general.timezone:
+    name: "{{ chrony_timezone }}"
+  when: __chrony_current_timezone.stdout != chrony_timezone
+  tags: chrony
+
+- name: "Check if NTP is enabled"
+  ansible.builtin.command:
+    cmd: timedatectl show -p NTP --value
+  register: __chrony_ntp_status
+  tags: chrony
+
+- name: "Set timedatectl ntp true if not enabled"
+  ansible.builtin.command:
+    cmd: timedatectl set-ntp true
+  when: __chrony_ntp_status.stdout != "yes"
+  tags: chrony

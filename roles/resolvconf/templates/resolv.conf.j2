@@ -1,0 +1,8 @@
+{{ ansible_managed | comment }}
+
+{% for ns in resolvconf_nameservers %}
+nameserver {{ ns }}
+{% endfor %}
+{% if resolvconf_search_domains %}
+search {{ resolvconf_search_domains | join(' ') }}
+{% endif %}

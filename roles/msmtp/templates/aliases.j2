@@ -1,0 +1,7 @@
+{{ ansible_managed | comment }}
+
+# /etc/aliases file
+
+{% for alias in msmtp_aliases %}
+{{ alias.name }}: {{ alias.recipient }}
+{% endfor %}

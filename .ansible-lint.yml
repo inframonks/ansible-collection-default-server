@@ -1,0 +1,8 @@
+---
+skip_list:
+  - no-changed-when   # Ignoriert Warnungen, wenn ein 'changed_when' fehlt
+  - var-naming        # Ignoriert Namenskonventionen für Variablen
+
+warn_list:
+  - no-relative-paths # Warnung bei relativen Pfaden
+  - yaml              # Warnung bei YAML-Dateien

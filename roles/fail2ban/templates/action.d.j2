@@ -1,0 +1,8 @@
+{{ ansible_managed | comment }}
+
+{% if item.action_options is defined %}
+[Definition]
+{% for key, value in item.action_options.items() %}
+{{ key }} = {{ value }}
+{% endfor %}
+{% endif %}

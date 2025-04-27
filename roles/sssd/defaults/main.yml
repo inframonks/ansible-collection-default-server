@@ -1,0 +1,4 @@
+---
+sssd_domain_name: ads.krz.-uni-heidelberg.de
+sssd_ad_group_allowd_ssh_and_sudo: "Linux-Admins"
+sssd_ou_to_join_servers: "OU=Linux Server,DC=domain,DC=intra"

@@ -1,0 +1,69 @@
+---
+- name: "Gather operating system variables"
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution_file_variety | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags: sshd
+
+- name: "Combine ssh_server"
+  ansible.builtin.set_fact:
+    sshd_server: >-
+      {{
+        (defaults_sshd_server | default([])) |
+        combine(group_vars_sshd_server | default([]), list_merge='append') |
+        combine(host_vars_sshd_server | default([]), list_merge='append') |
+        combine(playbook_sshd_server | default([]), list_merge='append')
+      }}
+  tags: sshd
+
+- name: "Combine ssh_client"
+  ansible.builtin.set_fact:
+    sshd_client: >-
+      {{
+        (defaults_sshd_client | default([])) |
+        combine(group_vars_sshd_client | default([]), list_merge='append') |
+        combine(host_vars_sshd_client | default([]), list_merge='append') |
+        combine(playbook_sshd_client | default([]), list_merge='append')
+      }}
+  tags: sshd
+
+- name: "Install package"
+  ansible.builtin.package:
+    name: "{{ sshd_packages_name }}"
+    state: present
+  environment: "{{ proxy_env }}"
+  tags: sshd
+
+- name: "Configure client"
+  ansible.builtin.template:
+    src: "ssh.config.j2"
+    dest: "/etc/ssh/ssh_config"
+    owner: root
+    group: root
+    mode: "0640"
+  notify: Restart sshd
+  tags: sshd
+
+- name: "Configure server"
+  ansible.builtin.template:
+    src: "sshd.config.j2"
+    dest: "/etc/ssh/sshd_config"
+    owner: root
+    group: root
+    mode: "0640"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart sshd
+  tags: sshd
+
+- name: "Start and enable service"
+  ansible.builtin.service:
+    name: "{{ sshd_service_name }}"
+    state: started
+    enabled: true
+  tags: sshd

@@ -1,0 +1,46 @@
+---
+defaults_packages_install:
+  - python
+  - py3-pip
+  - netcat
+  - tree
+  - sudo
+  - vim
+  - htop
+  - tmux
+  - wget
+  - whois
+  - telnet
+  - bzip2
+  - dstat
+  - iotop
+  - strace
+  - tcpdump
+  - rsync
+  - xclip
+  - unzip
+  - less
+  - curl
+  - lsof
+  - pwgen
+  - screen
+  - build-essential
+  - drill
+  - ipcalc
+  - unrar
+  - bash-completion
+  - moreutils
+  - jq
+  - ca-certificates
+  - gnupg
+  - nmap
+  - cron
+  - socat
+  - iftop
+  - xclip
+  - logrotate
+  - swaks
+  - fontconfig
+defaults_packages_remove:
+  - sendmail
+  - ssmtp

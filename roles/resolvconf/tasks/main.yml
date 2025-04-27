@@ -1,0 +1,30 @@
+---
+- name: "Stop and disable"
+  ansible.builtin.service:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+  tags: resolvconf
+  failed_when: false
+
+- name: "Check if /etc/resolvconf is a symlink to /run/systemd/resolve/resolv.conf"
+  ansible.builtin.stat:
+    path: /etc/resolv.conf
+  register: resolvconf
+  tags: resolvconf
+
+- name: "Remove symlink to /etc/resolv.conf if it exists"
+  ansible.builtin.file:
+    path: /etc/resolv.conf
+    state: absent
+  when: resolvconf.stat.islnk
+  tags: resolvconf
+
+- name: "Create /etc/resolv.conf"
+  ansible.builtin.template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: "0644"
+  tags: resolvconf

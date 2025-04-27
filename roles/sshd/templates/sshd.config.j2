@@ -1,0 +1,32 @@
+{{ ansible_managed | comment }}
+
+{% if sshd_server|length > 0 %}
+{%   for option, value in sshd_server.items()|sort %}
+{%     if value is sameas true %}
+{{ option }} yes
+{%     elif value is sameas false %}
+{{ option }} no
+{%     elif value is string %}
+{{ option }} {{ value|string }}
+{%     elif value is number %}
+{{ option }} {{ value|int }}
+{%     elif value is iterable %}
+{%       for v in value %}
+{{ option }} {{ v }}
+{%       endfor %}
+{%     else %}
+{{ option }} {{ value }}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+{% if ssh_bind_ips is sameas true %}
+ListenAddress {{ ansible_default_ipv4.address }}
+{%   if ansible_default_ipv6.address is defined %}
+ListenAddress {{ ansible_default_ipv6.address | default('') }}
+{%   endif %}
+{% else %}
+{% if ssh_bind_ips is sameas false or ssh_bind_ips is not defined %}
+ListenAddress 0.0.0.0
+ListenAddress ::
+{% endif %}
+{% endif %}

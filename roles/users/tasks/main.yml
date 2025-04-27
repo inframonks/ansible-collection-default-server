@@ -1,0 +1,73 @@
+---
+- name: "Install package sudo"
+  ansible.builtin.package:
+    name: sudo
+    state: present
+  tags: users
+
+- name: "Manage users"
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    comment: "{{ item.fullname | default(omit) }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    append: true
+    create_home: true
+    state: "{{ item.state }}"
+    system: "{{ item.system_account | default(omit) }}"
+    password: "{{ item.password | default(omit) | password_hash('sha512') }}"
+    update_password: on_create
+  loop: "{{ users }}"
+  tags: users
+
+- name: "Manage authorized keys"
+  ansible.posix.authorized_key:
+    user: "{{ item.0.name }}"
+    key: "{{ item.1 }}"
+  with_subelements: # "{{ users | subelements('authorized_keys') }}"
+    - "{{ users }}"
+    - authorized_keys
+  failed_when: false
+  tags: users
+
+- name: "Create sudoer files"
+  ansible.builtin.lineinfile:
+    path: "/etc/sudoers.d/user_{{ item.name }}"
+    line: "{{ item.name }} {{ item.cmd | default('ALL=(ALL) NOEXEC: /bin/false') }}"
+    state: "{{ item.state }}"
+    mode: "0440"
+    create: true
+    validate: 'visudo -cf %s'
+  loop: "{{ users }}"
+  when: (item.sudo | default(false)) and item.state == 'present'
+  tags: users
+
+- name: "Remove sudoer files"
+  ansible.builtin.file:
+    path: '/etc/sudoers.d/user_{{ item.name }}'
+    state: absent
+  loop: "{{ users }}"
+  when: item.state == 'absent'
+  tags: users
+
+- name: "Remove old homes"
+  ansible.builtin.file:
+    path: '/home/{{ item.name }}'
+    state: absent
+  loop: "{{ users }}"
+  when: item.state == 'absent'
+  tags: users
+
+- name: "Copy bash_files"
+  ansible.builtin.copy:
+    src: "{{ item.1.name }}"
+    dest: "/home/{{ item.0.name }}/.{{ item.1.name }}"
+    owner: "{{ item.0.name }}"
+    group: "{{ item.0.name }}"
+    mode: "{{ item.1.mode }}"
+  with_subelements:
+    - "{{ users }}"
+    - bash_files
+  when: (item.0.bash_files | default([]) | length) > 0
+  tags:
+    - users
+    - bashrc

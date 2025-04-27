@@ -1,0 +1,27 @@
+# Mounts
+
+## Exmpales:
+
+```yaml
+mounts:
+  - mount: "/"
+    src: "/dev/system/root"
+    fstype: "xfs"
+    opts: "defaults"
+  - mount: "/var/log"
+    src: "/dev/system/log"
+    fstype: "xfs"
+    opts: "noatime"
+  - mount: "/data"
+    src: "192.168.1.100:/shared/data"
+    fstype: "nfs"
+    opts: "rw,sync"
+  - mount: "/mnt/backup"
+    src: "//192.168.1.101/backup"
+    fstype: "cifs"
+    opts: "username=user,password=pass,iocharset=utf8"
+  - mount: "/mnt/ceph"
+    src: "10.0.0.1:/volumes/cephfs"
+    fstype: "ceph"
+    opts: "_netdev"
+```

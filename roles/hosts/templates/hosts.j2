@@ -1,0 +1,23 @@
+{{ ansible_managed | comment }}
+
+127.0.0.1      localhost localhost.localdomain localhost4 localhost4.localdomain4
+{% if hosts_ipv6 | length > 0 %}
+::1            localhost6 localhost6.localdomain6 localhost6
+{% endif %}
+{% if hosts_ipv4 | length > 0 %}
+{% set space = 16 - hosts_ipv4 | length %}
+{{ hosts_ipv4 }}{% for i in range(1, space,1) %} {% endfor %}{{ hosts_hostname + '.' + hosts_domain if hosts_domain is defined and hosts_domain != '' else '' }} {{ hosts_hostname }}{% if hosts_alias is defined %}{% for alias in hosts_alias %} {{ alias }}{% endfor %}{% endif %}
+{% endif %}
+
+{% if hosts_ipv6 | length > 0 %}
+{% set space = 39 - hosts_ipv6 | length %}
+{{ hosts_ipv6 }}{% for i in range(1, space,1) %} {% endfor %}{{ hosts_hostname + '.' + hosts_domain if hosts_domain is defined and hosts_domain != '' else '' }} {{ hosts_hostname }}{% if hosts_alias is defined %}{% for alias in hosts_alias %} {{ alias }}{% endfor %}{% endif %}
+{% endif %}
+
+{% if hosts_entrys | length > 0 %}
+{% for hosts in hosts_entrys %}
+{% set space = 16 - hosts.ip | length %}
+{{ hosts.ip }}{% for i in range(1, space,1) %} {% endfor %}{{ hosts.hostname + '.' + hosts.domain if hosts.domain is defined and hosts.domain != '' else '' }} {{ hosts.hostname }}{% if hosts.alias is defined %}{% for alias in hosts.alias %} {{ alias }}{% endfor %}{% endif %}{%if hosts.comment is defined %} # {{ hosts.comment }}{% endif %}
+
+{% endfor %}
+{% endif %}

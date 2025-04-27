@@ -1,0 +1,13 @@
+---
+hosts_hostname: "{{ inventory_hostname.split('.')[0] }}"
+hosts_domain: "{{ inventory_hostname.split('.')[1:] | join('.') | default('') }}"
+hosts_ipv4: "{{ ansible_default_ipv4.address }}"
+hosts_ipv6: "{{ ansible_default_ipv6.address | default('') }}"
+hosts_alias: []
+hosts_entrys: []
+# hosts_entrys:
+#  - hostname: specialName
+#    ip: 172.16.12.12
+#    domain: krz.uni-heidelberg.de
+#    comment: "TEST DING"
+#    alias: ['special', 'Name']

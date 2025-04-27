@@ -1,0 +1,20 @@
+{{ ansible_managed | comment }}
+
+confdir /etc/chrony/conf.d
+sourcedir /run/chrony-dhcp
+sourcedir /etc/chrony/sources.d
+keyfile /etc/chrony/chrony.keys
+driftfile /var/lib/chrony/chrony.drift
+ntsdumpdir /var/lib/chrony
+#log tracking measurements statistics
+logdir /var/log/chrony
+maxupdateskew 100.0
+rtcsync
+makestep 1 3
+leapsectz right/UTC
+{% for allowd_ip in chrony_allowed %}
+allow {{ allowd_ip }}
+{% endfor %}
+{% for ntp_server in chrony_servers %}
+server {{ ntp_server }} iburst
+{% endfor %}

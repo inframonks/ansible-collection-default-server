@@ -1,0 +1,53 @@
+---
+defaults_packages_install:
+  - htop
+  - iftop
+  - vim
+  - htop
+  - tmux
+  - tar
+  - wget
+  - whois
+  - bind-utils
+  - bash-completion
+  - telnet
+  - net-snmp-utils
+  - net-tools
+  - ipmitool
+  - bzip2
+  - cifs-utils
+  - dstat
+  - iotop
+  - expect
+  - dos2unix
+  - nmap
+  - swaks
+  - p7zip
+  - strace
+  - tcpdump
+  - rsync
+  - unzip
+  - tree
+  - xz
+  - curl
+  - wget
+  - vim
+  - vim-enhanced
+  - git
+  - fontconfig
+  - epel-release
+defaults_packages_install_epel:
+  - htop
+  - iftop
+  - swaks
+  - p7zip
+  - tig
+defaults_packages_remove:
+  - sendmail
+  - ssmtp
+  - cockpit
+  - cockpit-bridge
+  - cockpit-packagekit
+  - cockpit-storaged
+  - cockpit-system
+  - cockpit-ws

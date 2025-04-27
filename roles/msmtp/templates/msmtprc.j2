@@ -1,0 +1,33 @@
+{{ ansible_managed | comment }}
+# find out more about the configuration here: https://marlam.de/msmtp/msmtprc.txt
+# Set default values for all following accounts.
+
+# Set default values for all following accounts.
+defaults
+auth            {{ msmtp_auth }}
+tls             {{ msmtp_tls }}
+tls_starttls    {{ msmtp_tls_starttls  }}
+tls_trust_file  {{ msmtp_tls_trust_file }}
+set_from_header {{ msmtp_set_from_header }}
+syslog          {{ msmtp_syslog }}
+logfile         /var/log/msmtp.log
+aliases         /etc/aliases
+
+{% for account in msmtp_accounts %}
+# Account {{ account.name }}
+account {{ account.name }}
+host {{ account.host }}
+{% if account.port is defined %}
+port {{ account.port }}
+{% endif %}
+from {{ ansible_hostname ~ '@' ~ ansible_domain if ansible_domain is defined and ansible_domain != '' else ansible_hostname }}
+{% if account.user is defined %}
+user {{ account.user }}
+{% endif %}
+{% if account.password is defined %}
+password {{ account.password }}
+{% endif %}
+
+{% endfor %}
+# Set a default account
+account default : {{ msmtp_default_account }}

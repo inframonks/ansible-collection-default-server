@@ -1,0 +1,9 @@
+{{ ansible_managed | comment }}
+
+{% if item.jail_options is defined %}
+[{{ item.name }}]
+enabled = {{ item.enabled | default('false') }}
+{% for key, value in item.jail_options.items() %}
+{{ key }} = {{ value }}
+{% endfor %}
+{% endif %}

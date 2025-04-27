@@ -1,0 +1,18 @@
+{{ ansible_,ansible_managed | comment }}
+
+defaults {
+    user_friendly_names {{ multipath_friendly_names }}
+}
+
+blacklist {
+    devnode "{{ multipath_blackbist }}"
+}
+
+multipaths {
+    {% for multipath in multipath_pathes %}
+    multipath {
+        wwid {{ multipath.wwid }}
+        alias {{ multipath.alias }}
+    }
+    {% endfor %}
+}

@@ -1,0 +1,152 @@
+---
+- name: "Firewalld | Combine firewalld_services"
+  ansible.builtin.set_fact:
+    firewalld_services: >-
+      {{
+        (defaults_firewalld_services | default([])) |
+        combine(group_vars_firewalld_services | default([]), list_merge='append') |
+        combine(host_vars_firewalld_services | default([]), list_merge='append') |
+        combine(playbook_firewalld_services | default([]), list_merge='append') |
+        unique
+      }}
+  tags: firewalld
+
+- name: "Firewalld | Combine firewalld_zones"
+  ansible.builtin.set_fact:
+    firewalld_zones: >-
+      {{
+        (defaults_firewalld_zones | default([])) |
+        combine(group_vars_firewalld_zones | default([]), list_merge='append') |
+        combine(host_vars_firewalld_zones | default([]), list_merge='append') |
+        combine(playbook_firewalld_zones | default([]), list_merge='append') |
+        unique
+      }}
+  tags: firewalld
+
+- name: "Firewalld | Combine firewalld_custom_zones"
+  ansible.builtin.set_fact:
+    firewalld_custom_zones: >-
+      {{
+        (defaults_firewalld_custom_zones | default([])) |
+        combine(group_vars_firewalld_custom_zones | default([]), list_merge='append') |
+        combine(host_vars_firewalld_custom_zones | default([]), list_merge='append') |
+        combine(playbook_firewalld_custom_zones | default([]), list_merge='append') |
+        unique
+      }}
+  tags: firewalld
+
+- name: "Firewalld | Combine firewalld_rules"
+  ansible.builtin.set_fact:
+    firewalld_rules: >-
+      {{
+        (defaults_firewalld_rules | default([])) |
+        combine(group_vars_firewalld_rules | default([]), list_merge='append') |
+        combine(host_vars_firewalld_rules | default([]), list_merge='append') |
+        combine(playbook_firewalld_rules | default([]), list_merge='append') |
+        unique
+      }}
+  tags: firewalld
+
+- name: "Install packages"
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: "present"
+  environment: "{{ proxy_env }}"
+  with_items:
+    - 'firewall-config'
+    - 'firewalld'
+    - 'python3-firewall'
+  tags: firewalld
+
+- name: "Define services"
+  ansible.builtin.template:
+    src: "firewalld.service.j2"
+    dest: "/etc/firewalld/services/{{ item.service }}.xml"
+    mode: '0644'
+  # changed_when: false
+  register: "_firewalld_define_services"
+  with_items: "{{ firewalld_services }}"
+  when: firewalld_services is defined
+  notify: Restart firewalld
+  tags: firewalld
+
+- name: "Start and enable service"
+  ansible.builtin.service:
+    name: "firewalld"
+    state: "started"
+    enabled: true
+  tags: firewalld
+
+- name: "Manage zones"
+  ansible.posix.firewalld:
+    immediate: "{{ item['immediate'] | default(omit) }}"
+    interface: "{{ item['interface'] | default(omit) }}"
+    permanent: "{{ item['permanent'] | default(false) }}"
+    source: "{{ item['source'] | default(omit) }}"
+    state: "{{ item['state'] | default(omit) }}"
+    zone: "{{ item['zone'] }}"
+  with_items: '{{ firewalld_zones }}'
+  when: firewalld_zones is defined
+  notify: Reload firewalld
+  tags: firewalld
+
+- name: "Gathering zones"
+  ansible.builtin.command:
+    cmd: "firewall-cmd --get-zones"
+  changed_when: false
+  register: "_firewalld_get_zones"
+  check_mode: false
+  when: firewalld_custom_zones is defined
+  tags: firewalld
+
+- name: "Delete custom zones"
+  ansible.builtin.command:
+    cmd: "firewall-cmd --permanent --delete-zone={{ item['zone'] }}"
+  register: "_firewalld_custom_zone_deleted"
+  with_items: '{{ firewalld_custom_zones }}'
+  when: >
+        item['zone'] in _firewalld_get_zones['stdout'] and
+        not item['present'] and
+        firewalld_custom_zones is defined
+  notify: Reload firewalld
+  tags: firewalld
+
+- name: "Create custom zones"
+  ansible.builtin.command:
+    cmd: "firewall-cmd --permanent --new-zone {{ item['zone'] }}"
+  register: "_firewalld_custom_zone_created"
+  with_items: '{{ firewalld_custom_zones }}'
+  when: >
+        item['zone'] not in _firewalld_get_zones['stdout'] and
+        item['present'] and
+        firewalld_custom_zones is defined
+  notify: Reload firewalld
+  tags: firewalld
+
+# We need to reload the service when custom zones are create/deleted
+- name: "Reload service"
+  ansible.builtin.service:
+    name: firewalld
+    state: reloaded
+  when: >
+        _firewalld_define_services or
+        _firewalld_custom_zone_deleted['changed'] or
+        _firewalld_custom_zone_created['changed'] and
+        firewalld_custom_zones is defined
+  tags: firewalld
+
+- name: "Manage rules"
+  ansible.posix.firewalld:
+    immediate: "{{ item['immediate'] | default(omit) }}"
+    interface: "{{ item['interface'] | default(omit) }}"
+    masquerade: "{{ item['masquerade'] | default(omit) }}"
+    permanent: "{{ item['permanent'] | default(omit) }}"
+    port: "{{ item['port'] | default(omit) }}"
+    service: "{{ item['service'] | default(omit) }}"
+    source: "{{ item['source'] | default(omit) }}"
+    state: "{{ item['state'] | default(omit) }}"
+    zone: "{{ item['zone'] | default(omit) }}"
+  with_items: '{{ firewalld_rules }}'
+  when: firewalld_rules is defined
+  notify: Reload firewalld
+  tags: firewalld

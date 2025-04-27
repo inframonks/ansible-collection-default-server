@@ -1,0 +1,6 @@
+---
+- name: "Reload sysctl"
+  ansible.builtin.command:
+    cmd: "/sbin/sysctl -p"
+    creates: "/etc/sysctl.conf"
+  tags: sysctl

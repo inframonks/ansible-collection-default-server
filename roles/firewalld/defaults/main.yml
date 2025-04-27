@@ -1,0 +1,72 @@
+---
+
+defaults_firewalld_rules:
+  - service: 'ssh'
+    state: 'enabled'
+    permanent: true
+#  - service: 'http'
+#    state: 'enabled'
+#    permanent: true
+#  - service: 'https'
+#    state: 'enabled'
+#    permanent: true
+#  - service: 'dhcp'
+#    permanent: true
+#    zone: 'public'
+#    zone: 'public'
+#  - service: 'https'
+#    state: 'enabled'
+#    permanent: true
+#    zone: 'public'
+
+defaults_firewalld_custom_zones: []
+#  - zone: 'docker'
+#    state: 'enabled'
+#    present: false
+#  - zone: 'privateDNS'
+#    state: 'enabled'
+#    present: true
+
+# Defines firewall zones (default zones - not custom zones)
+defaults_firewalld_zones: []
+#  - zone: 'home'
+#    permanent: true
+#    state: 'enabled'
+#    interface: 'enp0s3'
+#  - zone: 'public'
+#    permanent: true
+#    state: 'enabled'
+#    interface: 'enp0s8'
+
+# Define firewall services
+defaults_firewalld_services: []
+#  - service: consul_client
+#    description: "Ports required by consul_client"
+#    ports:
+#      - port: 8301
+#        protocol: tcp
+#      - port: 8301
+#        protocol: udp
+#      - port: 8302
+#        protocol: tcp
+#      - port: 8302
+#        protocol: udp
+#  - service: consul_server
+#    description: "Ports required by consul_server"
+#    ports:
+#      - port: 8300
+#        protocol: tcp
+#      - port: 8600
+#        protocol: udp
+#      - port: 8600
+#        protocol: tcp
+#  - service: consul_http
+#    description: "Ports required by consul_http"
+#    ports:
+#      - port: 8500
+#        protocol: tcp
+#  - service: consul_https
+#    description: "Ports required by consul_https"
+#    ports:
+#      - port: 8501
+#        protocol: tcp
