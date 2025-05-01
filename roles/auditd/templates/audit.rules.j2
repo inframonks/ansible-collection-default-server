@@ -1,0 +1,20 @@
+{{ ansible_managed | comment }}
+
+## Audit rules for user sessions
+## This will log execve calls (commands) for all users
+
+## Remove any previous rules (optional, depending on OS handling)
+-D
+
+## Default rules
+
+## Log execve syscalls (basically every command execution)
+-a always,exit -F arch=b64 -S execve -k user-cmd
+-a always,exit -F arch=b32 -S execve -k user-cmd
+
+## Make sure session events are logged
+-w /var/run/utmp -p wa -k session
+-w /var/log/wtmp -p wa -k logins
+-w /var/log/btmp -p wa -k logins
+
+## Add additional custom rules below if needed

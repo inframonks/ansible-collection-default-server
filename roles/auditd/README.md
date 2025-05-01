@@ -1,19 +1,30 @@
-# Ansible Role: CA
+# Ansible Rolle: Auditd
 
 [![License](https://img.shields.io/badge/license-MIT%20License-brightgreen.svg)](https://opensource.org/licenses/MIT)
 
 ## Description
 
-This role copies the CA certificates to the system trust stores and reloads them.
+Manages auditd logging.
 
 ## Role Variables
 
 The variables that can be overridden are defined in [defaults/main.yml](defaults/main.yml) and [vars](vars) directory. Below are the key variables:
 
+## Variablen
+
 | Name                     | Default Value                | Description                                      |
 | ------------------------ | ---------------------------- | ------------------------------------------------ |
-| `ca_source_path`         | `../files/ca`                | Path to fileglob ab certs                        |
+| auditd_extra_rules       | `[]`                         | Liste zusätzlicher Audit-Regeln                  |
+
 
 ## Dependencies
 
 None.
+
+## Additional rules
+
+```yaml
+auditd_extra_rules:
+  - "-w /etc/shadow -p r -k shadow-file-read"
+```
+

@@ -1,7 +1,5 @@
 ---
-- name: "Restart auditd"
+- name: Restart auditd
   ansible.builtin.service:
     name: auditd
     state: restarted
-    enabled: true
-  tags: auditd

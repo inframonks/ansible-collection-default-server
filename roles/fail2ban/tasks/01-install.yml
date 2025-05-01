@@ -1,0 +1,11 @@
+---
+- name: Ensure EPEL repository is enabled
+  ansible.builtin.package:
+    name: epel-release
+    state: present
+  when: ansible_distribution == "RedHat"
+
+- name: Ensure package is installed
+  ansible.builtin.package:
+    name: fail2ban
+    state: present

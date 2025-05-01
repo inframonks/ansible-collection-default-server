@@ -1,4 +1,5 @@
 ---
+chrony_port: 123
 chrony_set_time_zone: true
 chrony_timezone: 'Europe/Berlin'
 chrony_servers:

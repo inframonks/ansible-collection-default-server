@@ -1,0 +1,9 @@
+---
+- name: Configure service
+  ansible.builtin.template:
+    src: dnf-automatic.conf.j2
+    dest: /etc/dnf/automatic.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart dnf-automatic

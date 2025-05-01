@@ -1,21 +1,21 @@
 {{ ansible_managed | comment('c') }}
 
 [commands]
-apply_updates = {{ dnf_automatic_conf_apply_updates }}
-download_updates = {{ dnf_automatic_conf_download_updates }}
-random_sleep = {{ dnf_automatic_conf_random_sleep }}
-system_name = {{ dnf_automatic_conf_system_name }}
-system_package_cache = {{ dnf_automatic_conf_system_package_cache }}
-upgrade_type = {{ dnf_automatic_conf_upgrade_type }}
-reboot = {{ dnf_automatic_conf_reboot }}
-reboot_command = {{ dnf_automatic_conf_reboot_command | default('shutdown -r +5 "Rebooting after applying automatic package updates"')}}
+apply_updates = {{ dnf_automatic_apply_updates }}
+download_updates = {{ dnf_automatic_download_updates }}
+random_sleep = {{ dnf_automatic_random_sleep }}
+system_name = {{ dnf_automatic_system_name }}
+system_package_cache = {{ dnf_automatic_system_package_cache }}
+upgrade_type = {{ dnf_automatic_upgrade_type }}
+reboot = {{ dnf_automatic_reboot }}
+reboot_command = {{ dnf_automatic_reboot_command | default('shutdown -r +5 "Rebooting after applying automatic package updates"')}}
 
 [emitters]
-emit_via = {{ dnf_automatic_conf_emit_via }}
+emit_via = {{ dnf_automatic_emit_via }}
 
 [email]
-email_from = {{ dnf_automatic_conf_email_from }}
-email_to = {{ dnf_automatic_conf_email_to }}
-email_host = {{ dnf_automatic_conf_email_host }}
-email_tls = {{ dnf_automatic_conf_email_tls }}
-email_port = {{ dnf_automatic_conf_email_port }}
+email_from = {{ dnf_automatic_email_from }}
+email_to = {{ dnf_automatic_email_to }}
+email_host = {{ dnf_automatic_email_host }}
+email_tls = {{ dnf_automatic_email_tls }}
+email_port = {{ dnf_automatic_email_port }}

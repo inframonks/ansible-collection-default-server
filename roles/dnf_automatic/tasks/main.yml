@@ -1,23 +1,23 @@
 ---
-- name: "Install dnf-automatic package"
-  ansible.builtin.package:
-    name: dnf-automatic
-    state: present
-  tags: dnf-automatic
+- name: Import tasks
+  tags:
+    - dnf-automatic
+  block:
+    - name: Execute install tasks
+      ansible.builtin.import_tasks: 01-install.yml
 
-- name: "Configure dnf-automatic"
-  ansible.builtin.template:
-    src: dnf-automatic.conf.j2
-    dest: /etc/dnf/automatic.conf
-    owner: root
-    group: root
-    mode: '0644'
-  notify: Restart dnf-automatic
-  tags: dnf-automatic
+    - name: Execute config task
+      ansible.builtin.import_tasks: 02-config.yml
 
-- name: "Enable and start dnf-automatic timer"
+- name: Enable and start dnf-automatic timer
   ansible.builtin.systemd:
     name: dnf-automatic.timer
     enabled: true
     state: started
-  tags: dnf-automatic
+  tags:
+    - dnf-automatic
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+  tags:
+    - dnf-automatic

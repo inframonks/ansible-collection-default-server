@@ -1,26 +1,23 @@
-- name: "Auditd | Install auditd package"
-  ansible.builtin.package:
-    name: auditd
-    state: present
-    update_cache: true
-  tags: auditd
+---
+- name: Import tasks
+  tags:
+    - auditd
+  block:
+    - name: Execute install task
+      ansible.builtin.import_tasks: 01-install.yml
 
-- name: "Auditd | Ensure auditd service is enabled and started"
+    - name: Execute config task
+      ansible.builtin.import_tasks: 02-config.yml
+
+- name: Ensure service is started and enabled
   ansible.builtin.service:
     name: auditd
     state: started
     enabled: true
-  tags: auditd
+  tags:
+    - auditd
 
-- name: "Auditd | Configure auditd rules to log shell commands"
-  ansible.builtin.copy:
-    dest: /etc/audit/rules.d/logging.rules
-    content: |
-      # Log all commands executed in the shell
-      -a always,exit -F arch=b64 -S execve -k shell_history
-      -a always,exit -F arch=b32 -S execve -k shell_history
-    mode: '0640'
-    owner: root
-    group: root
-  notify: Restart auditd
-  tags: auditd
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+  tags:
+    - auditd

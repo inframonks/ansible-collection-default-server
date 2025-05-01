@@ -1,0 +1,5 @@
+---
+- name: Update truststore
+  ansible.builtin.command:
+    cmd: "{{ ca_update }}"
+  when: __ca_copy.changed

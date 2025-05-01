@@ -1,5 +1,5 @@
 ---
-- name: "Gather operating system variables"
+- name: Gather operating system variables
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:
     - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
@@ -9,21 +9,20 @@
     - "{{ ansible_distribution | lower }}.yml"
     - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
     - "{{ ansible_os_family | lower }}.yml"
-  tags: ca
+  tags:
+    - ca
 
-- name: "Copy certificates"
-  ansible.builtin.copy:
-    src: "{{ item }}"
-    dest: "{{ ca_path }}/"
-    mode: "0644"
-  with_fileglob:
-    - "{{ ca_source_path }}"
-  register: __ca_copy
-  notify: Update truststore
-  tags: ca
+- name: Import tasks
+  tags:
+    - ca
+  block:
+    - name: Execute install task
+      ansible.builtin.import_tasks: 01-install.yml
 
-- name: "Update truststore"
-  ansible.builtin.command:
-    cmd: "{{ ca_update }}"
-  when: __ca_copy.changed
-  tags: ca
+    - name: Execute config task
+      ansible.builtin.import_tasks: 02-config.yml
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+  tags:
+    - ca

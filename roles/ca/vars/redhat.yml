@@ -1,3 +1,4 @@
 ---
 ca_path: "/etc/pki/ca-trust/source/anchors"
 ca_update: "update-ca-trust"
+ca_package: "ca-certificates"

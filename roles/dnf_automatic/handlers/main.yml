@@ -1,6 +1,5 @@
 ---
-- name: "Restart dnf-automatic"
-  ansible.builtin.systemd:
+- name: Restart dnf-automatic
+  ansible.builtin.service:
     name: dnf-automatic.timer
     state: restarted
-  tags: dnf-automatic
