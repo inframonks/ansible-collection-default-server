@@ -1,8 +1,4 @@
 ---
-interfaces_packages:
-  - bridge-utils
-  - ifenslave
-
 interfaces_config:
   - name: lo
     bootproto: loopback

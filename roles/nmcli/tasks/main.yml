@@ -1,0 +1,57 @@
+---
+- name: Ensure packages are installed
+  ansible.builtin.package:
+    name:
+      - NetworkManager-libnm
+      - nm-connection-editor
+      - libsemanage-python
+      - policycoreutils-python
+    state: present
+  tags: nmcli
+
+- name: Ensure NetworkManager is running and enabled
+  ansible.builtin.service:
+    name: NetworkManager
+    state: started
+    enabled: true
+  tags: nmcli
+
+- name: Configure network interfaces
+  community.general.nmcli:
+    conn_name: "{{ item.conn_name | default(item.iface) }}"
+    ifname: "{{ item.iface }}"
+    type: "{{ item.type | default('ethernet') }}"
+    state: "{{ item.state | default('up') }}"
+    autoconnect: "{{ item.autoconnect | default(true) }}"
+    ip4: "{{ item.method4 == 'static' and item.ip4 | default(omit) or omit }}"
+    gw4: "{{ item.method4 == 'static' and item.gw4 | default(omit) or omit }}"
+    dns4: "{{ item.dns4 | default(omit) }}"
+    ip6: "{{ item.ip6 | default(omit) }}"
+    gw6: "{{ item.gw6 | default(omit) }}"
+    dns6: "{{ item.dns6 | default(omit) }}"
+    mtu: "{{ item.mtu | default(omit) }}"
+    vlan_id: "{{ item.vlan_id | default(omit) }}"
+    vlan_parent: "{{ item.vlan_parent | default(omit) }}"
+    master: "{{ item.master | default(omit) }}"
+    mode: "{{ item.mode | default(omit) }}"
+    bridge_ports: "{{ item.bridge_ports | default(omit) }}"
+    bridge_stp: "{{ item.bridge_stp | default(omit) }}"
+    wifi_ssid: "{{ item.wifi_ssid | default(omit) }}"
+    wifi_sec: "{{ item.wifi_sec | default(omit) }}"
+    wifi_psk: "{{ item.wifi_psk | default(omit) }}"
+    route_metric4: "{{ item.route_metric4 | default(omit) }}"
+    route_metric6: "{{ item.route_metric6 | default(omit) }}"
+    zone: "{{ item.zone | default(omit) }}"
+    route1: "{{ item.route1 | default(omit) }}"
+    route2: "{{ item.route2 | default(omit) }}"
+    route3: "{{ item.route3 | default(omit) }}"
+  loop: "{{ nmcli_interfaces }}"
+  notify: Reload nmcli
+  tags: nmcli
+
+- name: Remove old connections (optional, vorsichtig!)
+  community.general.nmcli:
+    conn_name: "{{ item.iface }}"
+    state: absent
+  loop: "{{ nmcli_interfaces }}"
+  when: item.state == 'absent'
