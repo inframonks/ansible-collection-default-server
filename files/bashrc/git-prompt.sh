@@ -6,6 +6,7 @@ PS1_RED="\[\e[0;31m\]"
 PS1_GREEN="\[\e[0;32m\]"
 PS1_YELLOW="\[\e[0;33m\]"
 PS1_BLUE="\[\e[0;34m\]"
+PS1_LIGHTBLUE="\[\e[1;34m\]"
 PS1_CYAN="\[\e[0;36m\]"
 
 # Git-Status ohne \[ \], aber mit ANSI
@@ -58,7 +59,7 @@ set_bash_prompt() {
     exit_str="${PS1_RED}✖${last_exit}${PS1_RESET} "
   fi
 
-  PS1="${now_str} ${exit_str}${user_color}\u${PS1_RESET}@${PS1_BLUE}\h${PS1_RESET}:${PS1_CYAN}\w${PS1_RESET}\$(parse_git_branch)\n\$ "
+  PS1="${now_str} ${exit_str}${user_color}\u${PS1_RESET}@${PS1_LIGHTBLUE}\h${PS1_RESET}:${PS1_CYAN}\w${PS1_RESET}\$(parse_git_branch)\n\$ "
 }
 
 PROMPT_COMMAND=set_bash_prompt
