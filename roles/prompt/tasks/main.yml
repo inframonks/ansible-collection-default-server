@@ -24,9 +24,6 @@
     mode: "{{ item.mode }}"
   notify: "Update font cache"
   with_items:
-    - source: "../files/prompt/yq-v{{ prompt_yq_version }}-{{ ansible_system | lower }}-{{ ansible_architecture }}"
-      dest: "/usr/local/bin/yq"
-      mode: "0755"
     - source: "../files/prompt/bcrypt"
       dest: "/usr/local/bin/bycrypt"
       mode: "0755"
