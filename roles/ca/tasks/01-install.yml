@@ -1,5 +1,0 @@
----
-- name: Ensure package is installed
-  ansible.builtin.package:
-    name: "{{ ca_package_name }}"
-    state: present

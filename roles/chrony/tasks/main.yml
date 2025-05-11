@@ -9,32 +9,84 @@
     - "{{ ansible_distribution | lower }}.yml"
     - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
     - "{{ ansible_os_family | lower }}.yml"
-  tags:
-    - chrony
+  tags: chrony
 
-- name: Import tasks
-  tags:
-    - chrony
-  block:
-    - name: Execute install task
-      ansible.builtin.import_tasks: 01-install.yml
+- name: Uninstall default time synchronization services
+  ansible.builtin.package:
+    name: "{{ chrony_uninstall_packages }}"
+    state: absent
+  when: ansible_os_family == "Debian"
+  become: true
+  tags: chrony
 
-    - name: Execute config task
-      ansible.builtin.import_tasks: 02-config.yml
+- name: Stop and disable systemd-timesyncd on Debian-based systems
+  ansible.builtin.service:
+    name: systemd-timesyncd
+    state: stopped
+    enabled: false
+  failed_when: false
+  when: ansible_os_family == "Debian"
+  become: true
+  tags: chrony
 
-    - name: Execute firewall task
-      ansible.builtin.import_tasks: 03-firewall.yml
-      when: not firewall_enabled | default(false)
+- name: Ensure package is installed
+  ansible.builtin.package:
+    name: "{{ chrony_package_name }}"
+    state: present
+  become: true
+  tags: chrony
+
+- name: Configure service
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: "{{ chrony_config_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+  become: true
+  tags: chrony
+
+- name: Check current timezone
+  ansible.builtin.command:
+    cmd: timedatectl show -p Timezone --value
+  register: __chrony_current_timezone
+  changed_when: false
+  become: true
+  tags: chrony
+
+- name: Configure timezone if not set
+  community.general.timezone:
+    name: "{{ chrony_timezone }}"
+  when: __chrony_current_timezone.stdout != chrony_timezone
+  become: true
+  tags: chrony
+
+- name: Check if NTP is enabled
+  ansible.builtin.command:
+    cmd: timedatectl show -p NTP --value
+  register: __chrony_ntp_status
+  changed_when: false
+  become: true
+  tags: chrony
+
+- name: Set timedatectl ntp true if not enabled
+  ansible.builtin.command:
+    cmd: timedatectl set-ntp true
+  when: __chrony_ntp_status.stdout != "yes"
+  changed_when: false
+  become: true
+  tags: chrony
 
 - name: Ensure service is started and enabled
   ansible.builtin.service:
     name: "{{ chrony_service_name }}"
     state: started
     enabled: true
-  tags:
-    - chrony
+  become: true
+  tags: chrony
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
-  tags:
-    - chrony
+  become: true
+  tags: chrony

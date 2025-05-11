@@ -1,5 +1,5 @@
 ---
-defaults_ufw_rules:
+ufw_rules_defaults:
   - name: OpenSSH
     rule: allow
 

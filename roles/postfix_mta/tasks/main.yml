@@ -1,4 +1,4 @@
-- name: "Remove other mtas"
+- name: Remove other mtas
   ansible.builtin.apt:
     name: "{{ item }}"
     state: absent
@@ -7,10 +7,10 @@
     - sendmail
     - ssmtp
     - msmtp
-  tags:
-    - postfix-mta
+  become: true
+  tags: postfix-mta
 
-- name: "Install postfix"
+- name: Install postfix
   ansible.builtin.package:
     name: "{{ item }}"
     state: present
@@ -19,10 +19,10 @@
     - mailutils
     - libsasl2-modules
     - ca-certificates
-  tags:
-    - postfix-mta
+  become: true
+  tags: postfix-mta
 
-- name: "Configure /etc/postfix/main.cf"
+- name: Configure /etc/postfix/main.cf
   ansible.builtin.template:
     src: main.cf.j2
     dest: /etc/postfix/main.cf
@@ -30,50 +30,50 @@
     group: root
     mode: "0644"
     validate: "/usr/sbin/postfix check"
-  notify: "Restart postfix"
-  tags:
-    - postfix-mta
+  notify: Restart postfix
+  become: true
+  tags: postfix-mta
 
-- name: "Confiugure /etc/postfix/header_check"
+- name: Confiugure /etc/postfix/header_check
   ansible.builtin.template:
     src: header_check.j2
     dest: /etc/postfix/header_check
     owner: root
     group: root
     mode: "0644"
-  notify: "Restart postfix"
-  tags:
-    - postfix-mta
+  notify: Restart postfix
+  become: true
+  tags: postfix-mta
 
-- name: "Configure /etc/postfix/sender_canonical"
+- name: Configure /etc/postfix/sender_canonical
   ansible.builtin.template:
     src: sender_canonical.j2
     dest: /etc/postfix/sender_canonical
     owner: root
     group: root
     mode: "0644"
-  notify: "Restart postfix"
-  tags:
-    - postfix-mta
+  notify: Restart postfix
+  become: true
+  tags: postfix-mta
 
-- name: "Configure aliases"
+- name: Configure aliases
   ansible.builtin.template:
     src: aliases.j2
     dest: /etc/aliases
     owner: root
     group: root
     mode: "0644"
-  notify: "Update aliases"
-  tags:
-    - postfix-mta
+  notify: Update aliases
+  become: true
+  tags: postfix-mta
 
-- name: "Configure /etc/mail.rc"
+- name: Configure /etc/mail.rc
   ansible.builtin.template:
     src: mail.rc.j2
     dest: /etc/mail.rc
     owner: root
     group: root
     mode: "0644"
-  notify: "Update aliases"
-  tags:
-    - postfix-mta
+  notify: Update aliases
+  become: true
+  tags: postfix-mta

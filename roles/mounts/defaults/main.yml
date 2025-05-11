@@ -1,4 +1,5 @@
-defaults_mounts: []
+---
+mounts_defaults: []
   # - mount: "/"
   #   src: "/dev/system/root"
   #   fstype: "xfs"

@@ -1,5 +1,0 @@
----
-- name: Ensure package is installed
-  ansible.builtin.package:
-    name: dnf-automatic
-    state: present

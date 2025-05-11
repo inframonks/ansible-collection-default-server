@@ -1,39 +1,41 @@
-- name: "Combine rules"
+- name: Combine rules
   ansible.builtin.set_fact:
     ufw_rules: >-
       {{
-        (defaults_ufw_rules   | default([])) +
-        (group_vars_ufw_rules | default([])) +
-        (host_vars_ufw_rules  | default([])) +
-        (playbook_ufw_rules   | default([]))
+        (ufw_rules_defaults   | default([])) +
+        (ufw_rules_group_vars | default([])) +
+        (ufw_rules_host_vars  | default([])) +
+        (ufw_rules_playbook   | default([]))
         | unique
       }}
   tags: ufw
 
-- name: "Install packages"
+- name: Install packages
   ansible.builtin.package:
     name: "ufw"
     state: "present"
-  environment: "{{ proxy_env }}"
+  become: true
   tags: ufw
 
-- name: "Start and enable service"
+- name: Start and enable service
   ansible.builtin.service:
     name: "ufw"
     state: "started"
     enabled: true
+  become: true
   tags: ufw
 
-- name: "Configure defaults"
+- name: Configure defaults
   ansible.builtin.template:
     src: "ufw.j2"
     dest: "/etc/default/ufw"
     mode: "0644"
   notify: "Reload ufw"
   when: ufw_manage_config | bool
+  become: true
   tags: ufw
 
-- name: "Apply rules"
+- name: Apply rules
   community.general.ufw:
     comment: "{{ item.comment | default(omit) }}"
     default: "{{ item.default | default(omit) }}"
@@ -56,12 +58,14 @@
     to_port: "{{ item.to_port | default(omit) }}"
     state: "{{ item.state | default(omit) }}"
   loop: "{{ ufw_rules }}"
-  notify: "Reload ufw"
+  notify: Reload ufw
+  become: true
   tags: ufw
 
-- name: "Enable with default deny policy"
+- name: Enable with default deny policy
   community.general.ufw:
     state: "enabled"
     policy: "deny"
-  notify: "Reload ufw"
+  notify: Reload ufw
+  become: true
   tags: ufw

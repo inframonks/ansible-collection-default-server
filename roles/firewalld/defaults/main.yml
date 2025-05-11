@@ -1,6 +1,6 @@
 ---
 
-defaults_firewalld_rules:
+firewalld_defaults_rules:
   - service: 'ssh'
     state: 'enabled'
     permanent: true
@@ -19,7 +19,7 @@ defaults_firewalld_rules:
 #    permanent: true
 #    zone: 'public'
 
-defaults_firewalld_custom_zones: []
+firewalld_defaults_custom_zones: []
 #  - zone: 'docker'
 #    state: 'enabled'
 #    present: false
@@ -28,7 +28,7 @@ defaults_firewalld_custom_zones: []
 #    present: true
 
 # Defines firewall zones (default zones - not custom zones)
-defaults_firewalld_zones: []
+firewalld_defaults_zones: []
 #  - zone: 'home'
 #    permanent: true
 #    state: 'enabled'
@@ -39,7 +39,7 @@ defaults_firewalld_zones: []
 #    interface: 'enp0s8'
 
 # Define firewall services
-defaults_firewalld_services: []
+firewalld_defaults_services: []
 #  - service: consul_client
 #    description: "Ports required by consul_client"
 #    ports:

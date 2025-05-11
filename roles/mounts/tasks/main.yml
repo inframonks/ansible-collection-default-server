@@ -1,20 +1,15 @@
-- name: "Combine mounts"
+- name: Combine mounts
   ansible.builtin.set_fact:
     mounts: >-
       {{
-        (defaults_mounts | default([])) +
-        (group_vars_mounts | default([])) +
-        (host_vars_mounts | default([])) +
-        (playbook_mounts | default([]))
+        (mounts_defaults | default([])) +
+        (mounts_group_vars | default([])) +
+        (mounts_host_vars | default([])) +
+        (mounts_playbook | default([]))
       | unique }}
   tags: mounts
 
-# - name: "Debug mounts"
-#   ansible.builtin.debug:
-#     msg: "{{ mounts }}"
-#   tags: mounts
-
-- name: "Mount the defined volumes"
+- name: Mount the defined volumes
   ansible.posix.mount:
     path: "{{ item.mount }}"
     src: "{{ item.src }}"
@@ -22,9 +17,6 @@
     opts: "{{ item.opts | default('defaults') }}"
     state: mounted
   loop: "{{ mounts }}"
-  tags: mounts
-
-- name: "Reload systemd to adopt new fstab entries"
-  ansible.builtin.systemd:
-    daemon_reload: true
+  notify: Reload systemd
+  become: true
   tags: mounts

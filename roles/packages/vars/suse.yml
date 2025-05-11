@@ -1,5 +1,5 @@
 ---
-defaults_packages_install:
+packages_defaults_install:
   - python3
   - python3-pip
   - netcat
@@ -50,6 +50,6 @@ defaults_packages_install:
   - man
   - swaks
   - fontconfig
-defaults_packages_remove:
+packages_defaults_remove:
   - sendmail
   - ssmtp

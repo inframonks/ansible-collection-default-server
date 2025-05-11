@@ -1,5 +1,5 @@
 ---
-defaults_packages_install:
+packages_defaults_install:
   - htop
   - iftop
   - vim
@@ -36,13 +36,13 @@ defaults_packages_install:
   - git
   - fontconfig
   - epel-release
-defaults_packages_install_epel:
+packages_defaults_install_epel:
   - htop
   - iftop
   - swaks
   - p7zip
   - tig
-defaults_packages_remove:
+packages_defaults_remove:
   - sendmail
   - ssmtp
   - cockpit

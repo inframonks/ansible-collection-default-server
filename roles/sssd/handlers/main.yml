@@ -1,11 +1,13 @@
-- name: "Restart sssd"
+- name: Restart sssd
   ansible.builtin.systemd:
     name: sssd
     state: restarted
+  become: true
   tags: sssd
 
-- name: "Restart sshd"
+- name: Restart sshd
   ansible.builtin.systemd:
     name: "{{ sssd_sshd_service_name }}"
     state: restarted
+  become: true
   tags: sssd

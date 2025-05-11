@@ -1,5 +1,5 @@
 ---
-- name: "Gather operating system variables"
+- name: Gather operating system variables
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:
     - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
@@ -11,23 +11,26 @@
     - "{{ ansible_os_family | lower }}.yml"
   tags: multipath
 
-- name: "Install multipath tools"
+- name: Install multipath tools
   ansible.builtin.package:
     name: "{{ multipath_packages }}"
     state: present
+  become: true
   tags: multipath
 
-- name: "Configure multipath"
+- name: Configure multipath
   ansible.builtin.template:
     src: multipath.conf.j2
     dest: "{{ multipath_config_file }}"
     mode: '0644'
   notify: Restart multipath
+  become: true
   tags: multipath
 
-- name: "Enable and start multipathd service"
+- name: Enable and start multipathd service
   ansible.builtin.service:
     name: "{{ multipath_service }}"
     state: started
     enabled: true
+  become: true
   tags: multipath

@@ -1,5 +1,5 @@
 ---
-- name: "Gather operating system variables"
+- name: Gather operating system variables
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:
     - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
@@ -12,20 +12,22 @@
   when: not ansible_virtualization_type == 'lxc'
   tags: qemu_guest_agent
 
-- name: "Install package"
+- name: Install package
   ansible.builtin.package:
     name: "{{ qemu_guest_agent_packages }}"
     state: present
   environment: "{{ proxy_env }}"
   when: not ansible_virtualization_type == 'lxc'
+  become: true
   tags: qemu-guest-agent
 
-- name: "Start and enable service"
+- name: Start and enable service
   ansible.builtin.service:
     name: "{{ qemu_guest_agent_service }}"
     state: started
     enabled: true
-  tags: qemu-guest-agent
   when:
     - qemu_guest_agent_service is defined
     - not ansible_virtualization_type == 'lxc'
+  become: true
+  tags: qemu-guest-agent

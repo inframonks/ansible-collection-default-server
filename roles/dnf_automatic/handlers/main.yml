@@ -3,3 +3,5 @@
   ansible.builtin.service:
     name: dnf-automatic.timer
     state: restarted
+  become: true
+  tags: dnf_automatic

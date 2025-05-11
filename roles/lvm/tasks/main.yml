@@ -1,37 +1,33 @@
-- name: "Combine lvm_config"
+- name: Combine lvm_config
   ansible.builtin.set_fact:
     lvm_config: >-
       {{
-        (defaults_lvm_config | default([])) +
-        (group_vars_lvm_config | default([])) +
-        (host_vars_lvm_config | default([])) +
-        (playbook_lvm_config | default([]))
+        (lvm_defaults_config | default([])) +
+        (lvm_group_vars_config | default([])) +
+        (lvm_host_vars_config | default([])) +
+        (lvm_playbook_config | default([]))
       | unique }}
   tags: lvm
 
-# - name: "Debug lvm_config"
-#   ansible.builtin.debug:
-#     msg: "{{ lvm_config }}"
-#   tags:
-#     - lvm
-
-- name: "Install necessary packages"
+- name: Install necessary packages
   ansible.builtin.package:
     name:
       - lvm2
       - xfsprogs
     state: present
+  become: true
   tags: lvm
 
-- name: "Create volume groups"
+- name: Create volume groups
   community.general.lvg:
     vg: "{{ item.vg }}"
     pvs: "{{ item.pv }}"
     force: "{{ item.force | default(false) }}"
   loop: "{{ lvm_config }}"
+  become: true
   tags: lvm
 
-- name: "Create logical volumes"
+- name: Create logical volumes
   community.general.lvol:
     vg: "{{ lv.0.vg }}"
     lv: "{{ lv.1.lv }}"
@@ -39,18 +35,20 @@
   loop: "{{ lvm_config | subelements('logical_volumes') }}"
   loop_control:
     loop_var: lv
+  become: true
   tags: lvm
 
-- name: "Create filesystems"
+- name: Create filesystems
   community.general.filesystem:
     fstype: "{{ lv.1.fs_type | default('xfs') }}"
     dev: "/dev/{{ lv.0.vg }}/{{ lv.1.lv }}"
   loop: "{{ lvm_config | subelements('logical_volumes') }}"
   loop_control:
     loop_var: lv
+  become: true
   tags: lvm
 
-- name: "Create data folders"
+- name: Create data folders
   ansible.builtin.file:
     path: "{{ lv.1.mount }}"
     state: directory
@@ -58,9 +56,10 @@
   loop: "{{ lvm_config | subelements('logical_volumes') }}"
   loop_control:
     loop_var: lv
+  become: true
   tags: lvm
 
-- name: "Mount the volumes"
+- name: Mount the volumes
   ansible.posix.mount:
     path: "{{ lv.1.mount }}"
     src: "/dev/{{ lv.0.vg }}/{{ lv.1.lv }}"
@@ -70,5 +69,6 @@
   loop: "{{ lvm_config | subelements('logical_volumes') }}"
   loop_control:
     loop_var: lv
-  notify: "Reload systemd"
+  notify: Reload systemd
+  become: true
   tags: lvm

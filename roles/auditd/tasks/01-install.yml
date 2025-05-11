@@ -1,5 +1,0 @@
----
-- name: Ensure package is installed
-  ansible.builtin.package:
-    name: auditd
-    state: present

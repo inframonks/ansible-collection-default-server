@@ -1,5 +1,5 @@
 ---
-defaults_packages_install:
+packages_defaults_install:
   - vim
   - tmux
   - tar
@@ -31,7 +31,7 @@ defaults_packages_install:
   - git
   - fontconfig
   - epel-release
-defaults_packages_install_epel:
+packages_defaults_install_epel:
   - htop
   - p7zip
   - swaks
@@ -40,7 +40,7 @@ defaults_packages_install_epel:
   - p7zip
   - tig
   - iftop
-defaults_packages_remove:
+packages_defaults_remove:
   - sendmail
   - ssmtp
   - cockpit

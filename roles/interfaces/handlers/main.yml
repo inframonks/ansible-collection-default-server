@@ -3,4 +3,5 @@
   ansible.builtin.service:
     name: networking
     state: restarted
+  become: true
   tags: interfaces

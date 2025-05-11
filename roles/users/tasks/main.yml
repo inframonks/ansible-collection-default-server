@@ -1,73 +1,119 @@
 ---
-- name: "Install package sudo"
+- name: Install package sudo
   ansible.builtin.package:
     name: sudo
     state: present
+  become: true
   tags: users
 
-- name: "Manage users"
+- name: Remove old homes
+  ansible.builtin.file:
+    path: '/home/{{ users_absent.name }}'
+    state: absent
+  loop: "{{ users_list }}"
+  loop_control:
+    loop_var: users_absent
+  when: users_absent.state == 'absent'
+  become: true
+  tags: users
+
+- name: Manage users
   ansible.builtin.user:
-    name: "{{ item.name }}"
-    comment: "{{ item.fullname | default(omit) }}"
-    shell: "{{ item.shell | default('/bin/bash') }}"
+    name: "{{ users_list.name }}"
+    comment: "{{ users_list.fullname | default(omit) }}"
+    shell: "{{ users_list.shell | default('/bin/bash') }}"
     append: true
     create_home: true
-    state: "{{ item.state }}"
-    system: "{{ item.system_account | default(omit) }}"
-    password: "{{ item.password | default(omit) | password_hash('sha512') }}"
+    state: "{{ users_list.state | default('present') }}"
+    system: "{{ users_list.system_account | default(false) }}"
+    password: "{{ users_list.password | default(omit) if users_list.password is defined else omit }}"
     update_password: on_create
-  loop: "{{ users }}"
+  loop: "{{ users_list }}"
+  loop_control:
+    loop_var: users_list
+  when: users_list.name is match("^[a-z_][a-z0-9_-]*[$]?$")
+  become: true
   tags: users
 
-- name: "Manage authorized keys"
+- name: Manage authorized keys
   ansible.posix.authorized_key:
-    user: "{{ item.0.name }}"
-    key: "{{ item.1 }}"
-  with_subelements: # "{{ users | subelements('authorized_keys') }}"
-    - "{{ users }}"
-    - authorized_keys
-  failed_when: false
+    user: "{{ users_authorized_keys.0.name }}"
+    key: "{{ users_authorized_keys.1 }}"
+  loop: "{{ users_list | subelements('authorized_keys') }}"
+  loop_control:
+    loop_var: users_authorized_keys
+  when: users_authorized_keys.1 is defined and users_authorized_keys.1 | length > 0
+  become: true
   tags: users
 
-- name: "Create sudoer files"
+- name: Manage sudoer files
   ansible.builtin.lineinfile:
-    path: "/etc/sudoers.d/user_{{ item.name }}"
-    line: "{{ item.name }} {{ item.cmd | default('ALL=(ALL) NOEXEC: /bin/false') }}"
-    state: "{{ item.state }}"
+    path: "/etc/sudoers.d/user_{{ sudoers_file.name }}"
+    line: "{{ sudoers_file.name }} {{ sudoers_file.cmd | default('ALL=(ALL) NOEXEC: /bin/false') }}"
+    state: "{{ sudoers_file.sudo | default(false) | ternary('present', 'absent') }}"
     mode: "0440"
     create: true
     validate: 'visudo -cf %s'
-  loop: "{{ users }}"
-  when: (item.sudo | default(false)) and item.state == 'present'
+  loop: "{{ users_list }}"
+  loop_control:
+    loop_var: sudoers_file
+  become: true
   tags: users
 
-- name: "Remove sudoer files"
-  ansible.builtin.file:
-    path: '/etc/sudoers.d/user_{{ item.name }}'
-    state: absent
-  loop: "{{ users }}"
-  when: item.state == 'absent'
-  tags: users
-
-- name: "Remove old homes"
-  ansible.builtin.file:
-    path: '/home/{{ item.name }}'
-    state: absent
-  loop: "{{ users }}"
-  when: item.state == 'absent'
-  tags: users
-
-- name: "Copy bash_files"
+- name: Manage bash_files
   ansible.builtin.copy:
-    src: "{{ item.1.name }}"
-    dest: "/home/{{ item.0.name }}/.{{ item.1.name }}"
-    owner: "{{ item.0.name }}"
-    group: "{{ item.0.name }}"
-    mode: "{{ item.1.mode }}"
-  with_subelements:
-    - "{{ users }}"
-    - bash_files
-  when: (item.0.bash_files | default([]) | length) > 0
-  tags:
-    - users
-    - bashrc
+    src: "{{ users_bash_files.1.name }}"
+    dest: "/home/{{ users_bash_files.0.name }}/.{{ users_bash_files.1.name | basename }}"
+    owner: "{{ users_bash_files.0.name }}"
+    group: "{{ users_bash_files.0.name }}"
+    mode: "{{ users_bash_files.1.mode }}"
+  loop: "{{ users_list | subelements('bash_files') }}"
+  loop_control:
+    loop_var: users_bash_files
+    label: "{{ users_bash_files.0.name }} -> {{ users_bash_files.1.name }}"
+  become: true
+  tags: users
+
+- name: Copy scripts
+  ansible.builtin.copy:
+    src: "{{ item.source }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  with_items:
+    - source: git-prompt.sh
+      dest: "/etc/profile.d/git-prompt.sh"
+      mode: "0755"
+    - source: ssh-agent.sh
+      dest: "/etc/profile.d/ssh-agent.sh"
+      mode: "0755"
+    - source: bcrypt
+      dest: "/usr/local/bin/bycrypt"
+      mode: "0755"
+  become: true
+  tags: users
+
+- name: Copy dot files for root
+  ansible.builtin.copy:
+    src: "{{ item.source }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  notify: "Update font cache"
+  with_items:
+    - source: ms.sh
+      dest: "/root/.ms.sh"
+      mode: "0755"
+    - source: tmux.conf
+      dest: "/root/.tmux.conf"
+      mode: "0644"
+    - source: vimrc
+      dest: "/root/.vimrc"
+      mode: "0644"
+    - source: gitconfig
+      dest: "/root/.gitconfig"
+      mode: "0644"
+  become: true
+  tags: users

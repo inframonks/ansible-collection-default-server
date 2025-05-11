@@ -7,6 +7,7 @@
       - libsemanage-python
       - policycoreutils-python
     state: present
+  become: true
   tags: nmcli
 
 - name: Ensure NetworkManager is running and enabled
@@ -14,6 +15,7 @@
     name: NetworkManager
     state: started
     enabled: true
+  become: true
   tags: nmcli
 
 - name: Configure network interfaces
@@ -47,11 +49,14 @@
     route3: "{{ item.route3 | default(omit) }}"
   loop: "{{ nmcli_interfaces }}"
   notify: Reload nmcli
+  become: true
   tags: nmcli
 
-- name: Remove old connections (optional, vorsichtig!)
+- name: Remove old connections
   community.general.nmcli:
     conn_name: "{{ item.iface }}"
     state: absent
   loop: "{{ nmcli_interfaces }}"
   when: item.state == 'absent'
+  become: true
+  tags: nmcli

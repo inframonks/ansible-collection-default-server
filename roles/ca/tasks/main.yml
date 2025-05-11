@@ -9,20 +9,28 @@
     - "{{ ansible_distribution | lower }}.yml"
     - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
     - "{{ ansible_os_family | lower }}.yml"
-  tags:
-    - ca
+  tags: ca
 
-- name: Import tasks
-  tags:
-    - ca
-  block:
-    - name: Execute install task
-      ansible.builtin.import_tasks: 01-install.yml
+- name: Ensure package is installed
+  ansible.builtin.package:
+    name: "{{ ca_package_name }}"
+    state: present
+  become: true
+  tags: ca
 
-    - name: Execute config task
-      ansible.builtin.import_tasks: 02-config.yml
+- name: Copy certificates
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ ca_path }}/"
+    mode: "0644"
+  with_fileglob:
+    - "{{ ca_source_path }}"
+  register: __ca_copy
+  notify: Update truststore
+  become: true
+  tags: ca
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
-  tags:
-    - ca
+  become: true
+  tags: ca

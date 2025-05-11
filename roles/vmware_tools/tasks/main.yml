@@ -1,5 +1,5 @@
 ---
-- name: "Gather operating system variables"
+- name: Gather operating system variables
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:
     - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
@@ -11,16 +11,17 @@
     - "{{ ansible_os_family | lower }}.yml"
   tags: vmware_tools
 
-- name: "Install package"
+- name: Install package
   ansible.builtin.package:
-    name: "{{ vmware_package_name }}"
-    state: present
-  environment: "{{ proxy_env }}"
+    name: "{{ vmware_tools_package_name }}"
+    state: "{{ vmware_tools_package_state }}"
+  become: true
   tags: vmware_tools
 
-- name: "Start and enable service"
+- name: Start and enable service
   ansible.builtin.service:
-    name: "{{ vmware_service_name }}"
+    name: "{{ vmware_tools_service_name }}"
     state: started
     enabled: true
+  become: true
   tags: vmware_tools

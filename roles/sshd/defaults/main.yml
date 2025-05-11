@@ -1,7 +1,7 @@
 ---
 sshd_bind_ips: false
 
-defaults_sshd_client:
+sshd_client_defaults:
   ForwardX11Trusted: true
   GSSAPIAuthentication: true
   SendEnv:
@@ -10,7 +10,7 @@ defaults_sshd_client:
     - LC_IDENTIFICATION LC_ALL LANGUAGE
     - XMODIFIERS
 
-defaults_sshd_server:
+sshd_server_defaults:
   AcceptEnv:
     - LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
     - LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT

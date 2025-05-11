@@ -3,3 +3,5 @@
   ansible.builtin.service:
     name: "{{ chrony_service_name }}"
     state: restarted
+  become: true
+  tags: chrony

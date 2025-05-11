@@ -1,7 +1,7 @@
 ---
-users: {}
+users_list: {}
 
-# users:
+# users_list:
 #   - name: "litsadmin"
 #     fullname: "LITS Admin"
 #     authorized_keys:

@@ -1,23 +1,40 @@
 ---
-- name: Import tasks
-  tags:
-    - auditd
-  block:
-    - name: Execute install task
-      ansible.builtin.import_tasks: 01-install.yml
+- name: Ensure package is installed
+  ansible.builtin.package:
+    name: auditd
+    state: present
+  become: true
+  tags: auditd
 
-    - name: Execute config task
-      ansible.builtin.import_tasks: 02-config.yml
+- name: Deploy audit.rules for user session logging
+  ansible.builtin.template:
+    src: audit.rules.j2
+    dest: /etc/audit/rules.d/audit.rules
+    owner: root
+    group: root
+    mode: '0640'
+  notify: Restart auditd
+  become: true
+  tags: auditd
+
+- name: Apply extra rules if defined
+  ansible.builtin.lineinfile:
+    path: /etc/audit/rules.d/audit.rules
+    line: "{{ item }}"
+    insertafter: EOF
+  loop: "{{ auditd_extra_rules }}"
+  when: auditd_extra_rules | length > 0
+  notify: Restart auditd
+  become: true
+  tags: auditd
 
 - name: Ensure service is started and enabled
   ansible.builtin.service:
     name: auditd
     state: started
     enabled: true
-  tags:
-    - auditd
+  become: true
+  tags: auditd
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
-  tags:
-    - auditd

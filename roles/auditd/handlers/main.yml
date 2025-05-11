@@ -3,3 +3,5 @@
   ansible.builtin.service:
     name: auditd
     state: restarted
+  become: true
+  tags: auditd

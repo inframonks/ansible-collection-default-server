@@ -1,5 +1,5 @@
 ---
-- name: "Install packages"
+- name: Install packages
   ansible.builtin.package:
     state: present
     name:
@@ -15,73 +15,83 @@
       - chrony
       - python3-pexpect
       - python-pexpect
+  become: true
   tags: sssd
 
-- name: "Configure realmd.conf"
+- name: Configure realmd.conf
   ansible.builtin.template:
     src: realmd.conf.j2
     dest: /etc/realmd.conf
     mode: "0644"
     backup: true
   notify: Restart sssd
+  become: true
   tags: sssd
 
-- name: "Check if machine is joined the AD"
+- name: Check if machine is joined the AD
   ansible.builtin.shell:
     cmd: '/bin/bash -c "realm list | grep sssd"'
   register: realmd_bound
   changed_when: false
   ignore_errors: true
+  become: true
   tags: sssd
 
-- name: "Join system to AD and put the computer object defined OU"
+- name: Join system to AD and put the computer object defined OU
   ansible.builtin.expect:
     command: '/bin/bash -c "/usr/sbin/realm --verbose join {{ domain_name }} -U {{ bind_user }}"'
     responses:
       Password for *: "{{ bind_password }}"
   when: realmd_bound is failed and not squid_is_installed.stat.exists
   register: debug_join_domain
+  become: true
   tags: sssd
 
-- name: "Debug Join Domain Output"
+- name: Debug Join Domain Output
   ansible.builtin.debug:
     var: debug_join_domain.stdout_lines
+  become: true
   tags: sssd
 
-- name: "Fix sending sudo spam emails"
+- name: Fix sending sudo spam emails
   ansible.builtin.lineinfile:
     path: /etc/sssd/sssd.conf
     regexp: '^services ='
     line: services = nss, pam, sudo, ssh
   notify: restart sssd
+  become: true
   tags: sssd
 
-- name: "Restrict access based on specific ad group"
+- name: Restrict access based on specific ad group
   ansible.builtin.command:
     cmd: >
       /bin/bash -c "/usr/sbin/realm -v deny --all && /usr/sbin/realm -v permit -g '{{ ad_group_allowd_ssh_and_sudo }}'
       {% if ad_group_allowd_ssh_and_sudo_extra is defined %}'{{ ad_group_allowd_ssh_and_sudo_extra }}'{% endif %}
       {% if ad_group_allowd_ssh is defined %}'{{ ad_group_allowd_ssh }}'{% endif %}"
+    creates: /etc/sssd/sssd.conf  # Replace with a file or condition that indicates the command has already been executed
   register: debug_permit_groups
   when: not squid_is_installed.stat.exists
+  become: true
   tags: sssd
 
-- name: "Debug debug_permit_groups"
+- name: Debug debug_permit_groups
   ansible.builtin.debug:
     var: debug_permit_groups.stdout_lines
   tags: sssd
 
-- name: "Configure sudoers file"
+- name: Configure sudoers file
   ansible.builtin.template:
     src: sudoers_ad_group.j2
     dest: /etc/sudoers.d/sudoers_ad_group
     backup: true
     mode: "0440"
+  become: true
   tags: sssd
 
-- name: "Add pam_mkhomedir.so after pam_unix.so"
+- name: Add pam_mkhomedir.so after pam_unix.so
   ansible.builtin.lineinfile:
     path: /etc/pam.d/common-session
     insertafter: 'pam_unix.so'
     line: 'session required    pam_mkhomedir.so skel=/etc/skel/ umask=0077'
+  become: true
   tags: sssd

@@ -3,3 +3,5 @@
   ansible.builtin.service:
     name: fail2ban
     state: restarted
+  become: true
+  tags: fail2ban
