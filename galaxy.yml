@@ -46,22 +46,26 @@ dependencies:
   ansible.posix: ">=1.4.0"
 
 # The URL of the originating SCM repository
-repository: https://github.com/inframonks/default_server
+repository: https://github.com/inframonks/ansible-collection-default-server
 
 # The URL to any online docs
-documentation: https://github.com/inframonks/default_server
+documentation: https://github.com/inframonks/ansible-collection-default-server
 
 # The URL to the homepage of the collection/project
 homepage: https://lenhardt.cc
 
 # The URL to the collection issue tracker
-issues: https://github.com/inframonks/default_server/issue
+issues: https://github.com/inframonks/ansible-collection-default-server/issue
 
 # A list of file glob-like patterns used to filter any files or directories that should not be included in the build
 # artifact. A pattern is matched from the relative path of the file or directory of the collection directory. This
 # uses 'fnmatch' to match the files or directories. Some directories and files like 'galaxy.yml', '*.pyc', '*.retry',
 # and '.git' are always filtered. Mutually exclusive with 'manifest'
-build_ignore: []
+build_ignore:
+  - molecule/
+  - tests/
+  - .github/
+  - dev_notes/
 
 # A dict controlling use of manifest directives used in building the collection artifact. The key 'directives' is a
 # list of MANIFEST.in style
