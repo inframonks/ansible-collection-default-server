@@ -1,7 +1,7 @@
 ---
-users_list: {}
+users_defaults: {}
 
-# users_list:
+# users_defaults:
 #   - name: "litsadmin"
 #     fullname: "LITS Admin"
 #     authorized_keys:
