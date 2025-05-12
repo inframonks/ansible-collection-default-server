@@ -2,10 +2,10 @@
   ansible.builtin.set_fact:
     lvm_config: >-
       {{
-        (lvm_defaults_config | default([])) +
-        (lvm_group_vars_config | default([])) +
-        (lvm_host_vars_config | default([])) +
-        (lvm_playbook_config | default([]))
+        (lvm_config_defaults | default([])) +
+        (lvm_config_group_vars | default([])) +
+        (lvm_config_host_vars | default([])) +
+        (lvm_config_playbook | default([]))
       | unique }}
   tags: lvm
 
