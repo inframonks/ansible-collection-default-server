@@ -1,4 +1,16 @@
 ---
+- name: "Combine users"
+  ansible.builtin.set_fact:
+    users_list: >-
+      {{
+        (users_defaults | default([])) +
+        (users_group_vars | default([])) +
+        (users_host_vars | default([])) +
+        (users_playbook | default([]))
+      | unique
+      }}
+  tags: users
+
 - name: Install package sudo
   ansible.builtin.package:
     name: sudo
