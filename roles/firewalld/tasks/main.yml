@@ -3,11 +3,11 @@
   ansible.builtin.set_fact:
     firewalld_services: >-
       {{
-        (firewalld_defaults_services | default([])) |
-        combine(firewalld_group_vars_services | default([]), list_merge='append') |
-        combine(firewalld_host_vars_services | default([]), list_merge='append') |
-        combine(firewalld_playbook_services | default([]), list_merge='append') |
-        unique
+        ( firewalld_defaults_services | default([])   ) +
+        ( firewalld_group_vars_services | default([]) ) +
+        ( firewalld_host_vars_services | default([])  ) +
+        ( firewalld_playbook_services | default([])   )
+        | unique
       }}
   tags: firewalld
 
@@ -15,11 +15,11 @@
   ansible.builtin.set_fact:
     firewalld_zones: >-
       {{
-        (firewalld_defaults_zones | default([])) |
-        combine(firewalld_group_vars_zones | default([]), list_merge='append') |
-        combine(firewalld_host_vars_zones | default([]), list_merge='append') |
-        combine(firewalld_playbook_zones | default([]), list_merge='append') |
-        unique
+        ( firewalld_defaults_zones | default([])   ) +
+        ( firewalld_group_vars_zones | default([]) ) +
+        ( firewalld_host_vars_zones | default([])  ) +
+        ( firewalld_playbook_zones | default([])   )
+        | unique
       }}
   tags: firewalld
 
@@ -27,11 +27,11 @@
   ansible.builtin.set_fact:
     firewalld_custom_zones: >-
       {{
-        (firewalld_defaults_custom_zones | default([])) |
-        combine(firewalld_group_vars_custom_zones | default([]), list_merge='append') |
-        combine(firewalld_host_vars_custom_zones | default([]), list_merge='append') |
-        combine(firewalld_playbook_custom_zones | default([]), list_merge='append') |
-        unique
+        ( firewalld_defaults_custom_zones | default([])   ) +
+        ( firewalld_group_vars_custom_zones | default([]) ) +
+        ( firewalld_host_vars_custom_zones | default([])  ) +
+        ( firewalld_playbook_custom_zones | default([])   )
+        | unique
       }}
   tags: firewalld
 
@@ -39,13 +39,14 @@
   ansible.builtin.set_fact:
     firewalld_rules: >-
       {{
-        (firewalld_defaults_rules | default([])) |
-        combine(firewalld_group_vars_rules | default([]), list_merge='append') |
-        combine(firewalld_host_vars_rules | default([]), list_merge='append') |
-        combine(firewalld_playbook_rules | default([]), list_merge='append') |
-        unique
+        ( firewalld_defaults_rules | default([])   ) +
+        ( firewalld_group_vars_rules | default([]) ) +
+        ( firewalld_host_vars_rules | default([])  ) +
+        ( firewalld_playbook_rules | default([])   )
+        | unique
       }}
   tags: firewalld
+
 
 - name: Install packages
   ansible.builtin.package:
