@@ -1,4 +1,4 @@
-lvm_defaults_config: []
+lvm_config_defaults: []
   # - vg: system
   #   pv: /dev/vda
   #   logical_volumes:
