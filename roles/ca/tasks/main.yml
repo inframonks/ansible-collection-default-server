@@ -13,7 +13,7 @@
 
 - name: Ensure package is installed
   ansible.builtin.package:
-    name: "{{ ca_package_name }}"
+    name: "{{ ca_package }}"
     state: present
   become: true
   tags: ca

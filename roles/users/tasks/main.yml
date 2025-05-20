@@ -113,7 +113,6 @@
     owner: root
     group: root
     mode: "{{ item.mode }}"
-  notify: "Update font cache"
   with_items:
     - source: ms.sh
       dest: "/root/.ms.sh"
