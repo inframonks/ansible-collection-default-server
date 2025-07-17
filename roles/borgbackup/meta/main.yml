@@ -1,0 +1,9 @@
+description: Ansible role for BorgBackup
+author: Your Name
+license: MIT
+dependencies: []
+tags:
+  - backup
+  - borgbackup
+  - ansible
+version: 1.0.0

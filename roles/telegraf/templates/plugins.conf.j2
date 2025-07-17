@@ -1,0 +1,6 @@
+{{ ansible_managed | comment }}
+
+# Plugin configuration for {{ item.type }}
+{% for key, value in item.config.items() %}
+{{ key }} = {{ value | to_nice_yaml(indent=2) }}
+{% endfor %}

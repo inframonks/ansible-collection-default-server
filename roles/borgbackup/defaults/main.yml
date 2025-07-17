@@ -1,0 +1,5 @@
+default_variables: 
+  borgbackup_version: "1.2.3"
+  borgbackup_repository: "/path/to/repo"
+  borgbackup_encryption_passphrase: "your_passphrase"
+  borgbackup_retention_policy: "7d"

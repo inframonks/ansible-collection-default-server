@@ -1,0 +1,18 @@
+---
+# Packages to install
+certbot_packages:
+  - certbot
+  - python3-pip
+  - python3-certbot-dns-cloudflare
+
+# Cloudflare API Credentials
+certbot_cloudflare_api_email: "{{ cloudflare_api_email}}"
+certbot_cloudflare_api_key: "{{ encrypted_cloudflare_api_key}}"
+certbot_cloudflare_credentials_path: "/etc/letsencrypt/cloudflare.ini"
+certbot_renew_hook: ""
+
+certbot_certs:
+  - domains:
+    - "{{ ansible_fqdn }}"
+    reload_services:
+    - node_exporter

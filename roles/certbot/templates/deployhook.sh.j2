@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Certbot deploy hook for certificate renewal
+# Copies new certificates to a specified directory and reloads services
+
+# Copy the certificate files to the destination
+cp /etc/letsencrypt/live/{{ item.domains | first }}/fullchain.pem /etc/ssl/{{ item.domains | first }}_fullchain.pem
+cp /etc/letsencrypt/live/{{ item.domains | first }}/privkey.pem /etc/ssl/{{ item.domains | first }}_key.pem
+
+# Set appropriate permissions
+chmod 644 /etc/ssl/{{ item.domains | first }}_fullchain.pem
+chmod 644 /etc/ssl/{{ item.domains | first }}_key.pem
+
+# Reload necessary services
+systemctl restart {{ item.reload_services | join(" ") }}
+
+{% if certbot_renew_hook == "haproxy" %}
+# Check if the directory exists
+if [ ! -d "/etc/haproxy/certs" ]; then
+    mkdir -p /etc/haproxy/certs
+fi
+
+# Set appropriate permissions
+chmod 750 /etc/haproxy/certs
+
+# Copy the certificate files to the destination
+cp /etc/letsencrypt/live/{{ item.domains | first }}/fullchain.pem /etc/haproxy/certs/{{ item.domains | first }}.pem
+cat /etc/letsencrypt/live/{{ item.domains | first }}/privkey.pem >> /etc/haproxy/certs/{{ item.domains | first }}.pem
+
+# Set appropriate permissions
+chmod 644 /etc/haproxy/certs/{{ item.domains | first }}.pem
+
+# Reload HAProxy
+systemctl restart haproxy
+{% endif %} 

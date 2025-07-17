@@ -1,0 +1,36 @@
+- name: Install BorgBackup
+  apt:
+    name: borgbackup
+    state: present
+  tags: borgbackup
+
+- name: Create backup directory
+  file:
+    path: "{{ backup_directory }}"
+    state: directory
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: '0755'
+  tags: borgbackup
+
+- name: Configure Borg repository
+  command: borg init --encryption=repokey {{ backup_directory }}
+  args:
+    creates: "{{ backup_directory }}/config"
+  tags: borgbackup
+
+- name: Schedule backup job
+  copy:
+    src: borgbackup.sh.j2
+    dest: /usr/local/bin/borgbackup.sh
+    mode: '0755'
+  tags: borgbackup
+
+- name: Create cron job for backups
+  cron:
+    name: "BorgBackup"
+    minute: "0"
+    hour: "2"
+    job: "/usr/local/bin/borgbackup.sh"
+    state: present
+  tags: borgbackup

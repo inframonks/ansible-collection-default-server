@@ -1,0 +1,54 @@
+---
+- name: Install Certbot and dependencies
+  apt:
+    name: "{{ certbot_packages }}"
+    state: present
+    update_cache: yes
+  tags: certbot
+
+- name: Create Cloudflare credentials directory
+  file:
+    path: /etc/letsencrypt
+    state: directory
+    mode: '0700'
+  tags: certbot
+
+- name: Create Cloudflare INI file
+  template:
+    src: cloudflare.ini.j2
+    dest: "{{ certbot_cloudflare_credentials_path }}"
+    mode: '0600'
+  tags: certbot
+
+- name: Copy deployhook from template
+  template:
+    src: deployhook.sh.j2
+    dest: /etc/letsencrypt/renewal-hooks/deploy/deployhook.sh
+    mode: '0755'
+  loop: "{{ certbot_certs }}"
+  tags: certbot
+
+- name: Run Certbot to generate certificate
+  command: >
+    certbot certonly --dns-cloudflare
+    --dns-cloudflare-credentials {{ certbot_cloudflare_credentials_path }}
+    --dns-cloudflare-propagation-seconds 30
+    --non-interactive --agree-tos
+    --email {{ certbot_cloudflare_api_email }}
+    --cert-name "{{ item.domains | first }}"
+    --expand
+    -d {{ item.domains | join(',') }}
+    --deploy-hook '/etc/letsencrypt/renewal-hooks/deploy/deployhook.sh'
+  loop: "{{ certbot_certs }}"
+  tags: certbot
+  register: certbot_output
+  changed_when: "'Certificate deployed' in certbot_output.stdout"
+
+- name: Modify Certbot renewal configuration file
+  lineinfile:
+    path: "/etc/letsencrypt/renewal/{{ item.domains | first }}.conf"
+    regexp: '^renew_hook'
+    line: renew_hook = /etc/letsencrypt/renewal-hooks/deploy/deployhook.sh
+    state: present
+  loop: "{{ certbot_certs }}"
+  tags: certbot
