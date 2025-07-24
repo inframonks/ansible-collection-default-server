@@ -22,6 +22,6 @@ printf "  \n"
 printf "  Responsible: {{ host_responsible }}\n"
 printf "  \n"
 {% endif %}
-printf "    Last deployment: {{ ansible_date_time.date }} {{ ansible_date_time.time }} {{ ansible_date_time.tz }}\n"
-printf "    System uptime: $(uptime -p)\n"
+printf "  Last deployment: {{ ansible_date_time.date }} {{ ansible_date_time.time }} {{ ansible_date_time.tz }}\n"
+printf "  System uptime: $(uptime -p)\n"
 printf "  \n"

@@ -23,7 +23,6 @@ metadata_expire={{ repo.metadata_expire | default('6h') }}
 {% else %}
 metadata_expire=6h
 {% endif %}
-{% endif %}
 {% if repo.gpgcheck is defined -%}
 gpgcheck={{ repo.gpgcheck | default('0') }}
 gpgkey={{ repo.gpgkey | default('file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9') }}
