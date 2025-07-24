@@ -1,0 +1,23 @@
+---
+- name: Get list of files in /etc/yum.repos.d
+  ansible.builtin.command: ls /etc/yum.repos.d
+  register: __dnf_repos_files
+  tags: dnf_repos
+
+- name: Remove original repos if configured
+  ansible.builtin.file:
+    path: /etc/yum.repos.d/{{ item }}
+    state: absent
+  loop: "{{ __dnf_repos_files.stdout_lines }}"
+  when: dnf_repos_remove_original and item not in ['local.repo']
+  tags: dnf_repos
+
+- name: Configure DNF repositories
+  ansible.builtin.template:
+    src: local.repo.j2
+    dest: /etc/yum.repos.d/local.repo
+    owner: root
+    group: root
+    mode: '0644'
+  when: dnf_repos_list is defined and dnf_repos_list | length > 0
+  tags: dnf_repos

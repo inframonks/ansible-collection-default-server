@@ -1,0 +1,23 @@
+---
+dnf_repos_remove_original: true
+dnf_repos_list:
+  - name: baseos
+    mirrorlist: https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=BaseOS-$releasever$rltype
+    gpgcheck: 1
+    enabled: 1
+  - name: appstream
+    mirrorlist: https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=AppStream-$releasever$rltype
+    gpgcheck: 1
+    enabled: 1
+  - name: extras
+    mirrorlist: https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=extras-$releasever$rltype
+    gpgcheck: 1
+    enabled: 1
+  - name: crb
+    mirrorlist: https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=CRB-$releasever$rltype
+    gpgcheck: 1
+    enabled: 1
+  - name: epel
+    baseos: https://download.fedoraproject.org/pub/epel/$releasever/Everything/x86_64/
+    gpgcheck: 0
+    enabled: 1

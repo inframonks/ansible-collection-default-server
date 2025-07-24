@@ -2,7 +2,7 @@
 
 printf "  \n"
 printf "  Welcome to $(cat /etc/redhat-release) ($(uname -m))\n"
-printf "    FQDN:   {{ ansible_hostname }}{{ '.' + ansible_domain if ansible_domain is defined and ansible_domain != '' else '' }}\n"
+printf "    FQDN:   {{ ansible_host }}\n"
 printf "    Type:   {{ ansible_virtualization_type if ansible_virtualization_role == 'guest' else 'physical' }}\n"
 {% if not ansible_virtualization_type == 'lxc' %}
 printf "    Kernel: $(uname -sr)\n"
