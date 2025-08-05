@@ -93,7 +93,7 @@
     owner: root
     group: root
     mode: "{{ item.mode }}"
-  with_items:
+  loop:
     - source: git-prompt.sh
       dest: "/etc/profile.d/git-prompt.sh"
       mode: "0755"
@@ -101,7 +101,7 @@
       dest: "/etc/profile.d/ssh-agent.sh"
       mode: "0755"
     - source: bcrypt
-      dest: "/usr/local/bin/bycrypt"
+      dest: "/usr/local/bin/bcrypt"
       mode: "0755"
   become: true
   tags: users
@@ -113,7 +113,7 @@
     owner: root
     group: root
     mode: "{{ item.mode }}"
-  with_items:
+  loop:
     - source: ms.sh
       dest: "/root/.ms.sh"
       mode: "0755"
@@ -127,4 +127,40 @@
       dest: "/root/.gitconfig"
       mode: "0644"
   become: true
+  tags: users
+
+- name: Check if /etc/msmtprc exists
+  ansible.builtin.stat:
+    path: /etc/msmtprc
+  register: msmtprc_stat
+
+- name: Copy /etc/msmtprc to users home directories
+  ansible.builtin.copy:
+    src: "/etc/msmtprc"
+    dest: "/home/{{ users_list.name }}/.msmtprc"
+    owner: "{{ users_list.name }}"
+    group: "{{ users_list.name }}"
+    mode: "0600"
+    remote_src: true
+  loop: "{{ users_list }}"
+  loop_control:
+    loop_var: users_list
+  become: true
+  when:
+    - users_list.name != 'root'
+    - msmtprc_stat.stat.exists
+  tags: users
+
+- name: Replace logfile path in /etc/msmtprc to ~/.msmtp.log
+  ansible.builtin.replace:
+    path: "/home/{{ users_list.name }}/.msmtprc"
+    regexp: '^logfile.*'
+    replace: "logfile         ~/.msmtp.log"
+  loop: "{{ users_list }}"
+  loop_control:
+    loop_var: users_list
+  become: true
+  when:
+    - users_list.name != 'root'
+    - msmtprc_stat.stat.exists
   tags: users
