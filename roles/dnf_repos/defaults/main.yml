@@ -18,6 +18,6 @@ dnf_repos_list:
     gpgcheck: 1
     enabled: 1
   - name: epel
-    baseos: https://download.fedoraproject.org/pub/epel/$releasever/Everything/x86_64/
+    baseurl: https://download.fedoraproject.org/pub/epel/$releasever/Everything/x86_64/
     gpgcheck: 0
     enabled: 1
