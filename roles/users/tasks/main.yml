@@ -11,6 +11,11 @@
       }}
   tags: users
 
+- name: Debug users_list
+  ansible.builtin.debug:
+    var: users_list
+  tags: users
+
 - name: Install package sudo
   ansible.builtin.package:
     name: sudo
@@ -20,69 +25,91 @@
 
 - name: Remove old homes
   ansible.builtin.file:
-    path: '/home/{{ users_absent.name }}'
+    path: '/home/{{ user_item.name }}'
     state: absent
   loop: "{{ users_list }}"
   loop_control:
-    loop_var: users_absent
-  when: users_absent.state == 'absent'
+    loop_var: user_item
+  when: 
+    - users_list is defined
+    - users_list | length > 0
+    - user_item.state is defined
+    - user_item.state == 'absent'
   become: true
   tags: users
 
 - name: Manage users
   ansible.builtin.user:
-    name: "{{ users_list.name }}"
-    comment: "{{ users_list.fullname | default(omit) }}"
-    shell: "{{ users_list.shell | default('/bin/bash') }}"
+    name: "{{ user_item.name }}"
+    comment: "{{ user_item.fullname | default(omit) }}"
+    shell: "{{ user_item.shell | default('/bin/bash') }}"
     append: true
     create_home: true
-    state: "{{ users_list.state | default('present') }}"
-    system: "{{ users_list.system_account | default(false) }}"
-    password: "{{ users_list.password | default(omit) if users_list.password is defined else omit }}"
+    state: "{{ user_item.state | default('present') }}"
+    system: "{{ user_item.system_account | default(false) }}"
+    password: "{{ user_item.password | default(omit) if user_item.password is defined else omit }}"
     update_password: on_create
   loop: "{{ users_list }}"
   loop_control:
-    loop_var: users_list
-  when: users_list.name is match("^[a-z_][a-z0-9_-]*[$]?$")
+    loop_var: user_item
+  when: 
+    - users_list is defined
+    - users_list | length > 0
+    - user_item.name is defined
+    - user_item.name is match("^[a-z_][a-z0-9_-]*[$]?$")
   become: true
   tags: users
 
 - name: Manage authorized keys
   ansible.posix.authorized_key:
-    user: "{{ users_authorized_keys.0.name }}"
-    key: "{{ users_authorized_keys.1 }}"
-  loop: "{{ users_list | subelements('authorized_keys') }}"
+    user: "{{ auth_key_item.0.name }}"
+    key: "{{ auth_key_item.1 }}"
+  loop: "{{ users_list | subelements('authorized_keys', skip_missing=True) }}"
   loop_control:
-    loop_var: users_authorized_keys
-  when: users_authorized_keys.1 is defined and users_authorized_keys.1 | length > 0
+    loop_var: auth_key_item
+  when: 
+    - users_list is defined
+    - users_list | length > 0
+    - auth_key_item.1 is defined 
+    - auth_key_item.1 | length > 0
+    - auth_key_item.0.state | default('present') == 'present'
   become: true
   tags: users
 
 - name: Manage sudoer files
   ansible.builtin.lineinfile:
-    path: "/etc/sudoers.d/user_{{ sudoers_file.name }}"
-    line: "{{ sudoers_file.name }} {{ sudoers_file.cmd | default('ALL=(ALL) NOEXEC: /bin/false') }}"
-    state: "{{ sudoers_file.sudo | default(false) | ternary('present', 'absent') }}"
+    path: "/etc/sudoers.d/user_{{ sudo_item.name }}"
+    line: "{{ sudo_item.name }} {{ sudo_item.cmd | default('ALL=(ALL) NOEXEC: /bin/false') }}"
+    state: "{{ sudo_item.sudo | default(false) | ternary('present', 'absent') }}"
     mode: "0440"
     create: true
     validate: 'visudo -cf %s'
   loop: "{{ users_list }}"
   loop_control:
-    loop_var: sudoers_file
+    loop_var: sudo_item
+  when:
+    - users_list is defined
+    - users_list | length > 0
+    - sudo_item.name is defined
+    - sudo_item.state | default('present') == 'present'
   become: true
   tags: users
 
 - name: Manage bash_files
   ansible.builtin.copy:
-    src: "{{ users_bash_files.1.name }}"
-    dest: "/home/{{ users_bash_files.0.name }}/.{{ users_bash_files.1.name | basename }}"
-    owner: "{{ users_bash_files.0.name }}"
-    group: "{{ users_bash_files.0.name }}"
-    mode: "{{ users_bash_files.1.mode }}"
-  loop: "{{ users_list | subelements('bash_files') }}"
+    src: "{{ bash_file_item.1.name }}"
+    dest: "/home/{{ bash_file_item.0.name }}/.{{ bash_file_item.1.name | basename }}"
+    owner: "{{ bash_file_item.0.name }}"
+    group: "{{ bash_file_item.0.name }}"
+    mode: "{{ bash_file_item.1.mode }}"
+  loop: "{{ users_list | subelements('bash_files', skip_missing=True) }}"
   loop_control:
-    loop_var: users_bash_files
-    label: "{{ users_bash_files.0.name }} -> {{ users_bash_files.1.name }}"
+    loop_var: bash_file_item
+    label: "{{ bash_file_item.0.name }} -> {{ bash_file_item.1.name }}"
+  when:
+    - users_list is defined
+    - users_list | length > 0
+    - bash_file_item.0.state | default('present') == 'present'
   become: true
   tags: users
 
@@ -137,30 +164,36 @@
 - name: Copy /etc/msmtprc to users home directories
   ansible.builtin.copy:
     src: "/etc/msmtprc"
-    dest: "/home/{{ users_list.name }}/.msmtprc"
-    owner: "{{ users_list.name }}"
-    group: "{{ users_list.name }}"
+    dest: "/home/{{ msmtp_user.name }}/.msmtprc"
+    owner: "{{ msmtp_user.name }}"
+    group: "{{ msmtp_user.name }}"
     mode: "0600"
     remote_src: true
   loop: "{{ users_list }}"
   loop_control:
-    loop_var: users_list
+    loop_var: msmtp_user
   become: true
   when:
-    - users_list.name != 'root'
+    - users_list is defined
+    - users_list | length > 0
+    - msmtp_user.name != 'root'
+    - msmtp_user.state | default('present') == 'present'
     - msmtprc_stat.stat.exists
   tags: users
 
 - name: Replace logfile path in /etc/msmtprc to ~/.msmtp.log
   ansible.builtin.replace:
-    path: "/home/{{ users_list.name }}/.msmtprc"
+    path: "/home/{{ msmtp_replace_user.name }}/.msmtprc"
     regexp: '^logfile.*'
     replace: "logfile         ~/.msmtp.log"
   loop: "{{ users_list }}"
   loop_control:
-    loop_var: users_list
+    loop_var: msmtp_replace_user
   become: true
   when:
-    - users_list.name != 'root'
+    - users_list is defined
+    - users_list | length > 0
+    - msmtp_replace_user.name != 'root'
+    - msmtp_replace_user.state | default('present') == 'present'
     - msmtprc_stat.stat.exists
   tags: users

@@ -1,4 +1,4 @@
-{% for repo in proxmox_automatic_repos %}
+{% for repo in dnf_repos_list %}
 [{{ repo.name | lower }}]
 name={{ repo.name_long | default(repo.name) }}
 {% if repo.mirrorlist is defined -%}
@@ -7,27 +7,12 @@ mirrorlist={{ repo.mirrorlist }}
 {% if repo.baseurl is defined -%}
 baseurl={{ repo.baseurl }}
 {% endif %}
-enabled=1
-{% if repo.enabled is defined -%}
 enabled={{ repo.enabled | default('1') }}
-{% else %}
-enabled=1
-{% endif %}
-{% if repo.countme is defined -%}
 countme={{ repo.countme | default('1') }}
-{% else %}
-countme=1
-{% endif %}
-{% if repo.metadata_expire is defined -%}
 metadata_expire={{ repo.metadata_expire | default('6h') }}
-{% else %}
-metadata_expire=6h
-{% endif %}
-{% if repo.gpgcheck is defined -%}
 gpgcheck={{ repo.gpgcheck | default('0') }}
-gpgkey={{ repo.gpgkey | default('file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9') }}
-{% else %}
-gpgcheck=0
+{% if repo.gpgcheck | default('0') | int == 1 and repo.gpgkey is defined -%}
+gpgkey={{ repo.gpgkey }}
 {% endif %}
 cost={{ repo.cost | default('100') }}
 
