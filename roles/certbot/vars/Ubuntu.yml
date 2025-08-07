@@ -1,0 +1,10 @@
+---
+# Ubuntu specific variables (inherits from Debian but can be customized)
+certbot_packages:
+  - certbot
+  - python3-pip
+  - python3-certbot-dns-cloudflare
+
+# Package manager specific settings
+certbot_package_manager: apt
+certbot_update_cache: true

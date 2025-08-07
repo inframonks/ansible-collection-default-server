@@ -1,9 +1,36 @@
 ---
+- name: Gather distribution facts
+  setup:
+    gather_subset:
+      - '!all'
+      - '!any'
+      - distribution
+  tags: certbot
+
+- name: Load distribution-specific variables
+  include_vars: "{{ ansible_os_family }}.yml"
+  tags: certbot
+
+- name: Fail for unsupported distributions
+  fail:
+    msg: "Distribution {{ ansible_os_family }} ({{ ansible_distribution }}) is not supported by this role. Supported: Debian, Ubuntu, RedHat, Rocky"
+  when: ansible_os_family not in ['Debian', 'RedHat']
+  tags: certbot
+
+- name: Enable EPEL repository (RedHat family)
+  package:
+    name: epel-release
+    state: present
+  when: 
+    - ansible_os_family == "RedHat"
+    - certbot_enable_epel | default(false)
+  tags: certbot
+
 - name: Install Certbot and dependencies
-  apt:
+  package:
     name: "{{ certbot_packages }}"
     state: present
-    update_cache: yes
+    update_cache: "{{ certbot_update_cache | default(false) }}"
   tags: certbot
 
 - name: Create Cloudflare credentials directory
@@ -11,6 +38,15 @@
     path: /etc/letsencrypt
     state: directory
     mode: '0700'
+  tags: certbot
+
+- name: Create certbot deploy hook log file
+  file:
+    path: /var/log/certbot-deployhook.log
+    state: touch
+    mode: '0644'
+    owner: root
+    group: root
   tags: certbot
 
 - name: Create Cloudflare INI file

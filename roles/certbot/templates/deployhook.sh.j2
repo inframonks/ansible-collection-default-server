@@ -3,16 +3,92 @@
 # Certbot deploy hook for certificate renewal
 # Copies new certificates to a specified directory and reloads services
 
+CERT_NAME="{{ item.domains | first }}"
+LOG_FILE="/var/log/certbot-deployhook.log"
+
+# Function to log messages
+log_message() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+}
+
+log_message "Starting deploy hook for certificate: $CERT_NAME"
+
 # Copy the certificate files to the destination
-cp /etc/letsencrypt/live/{{ item.domains | first }}/fullchain.pem /etc/ssl/{{ item.domains | first }}_fullchain.pem
-cp /etc/letsencrypt/live/{{ item.domains | first }}/privkey.pem /etc/ssl/{{ item.domains | first }}_key.pem
+cp /etc/letsencrypt/live/$CERT_NAME/fullchain.pem /etc/ssl/${CERT_NAME}_fullchain.pem
+cp /etc/letsencrypt/live/$CERT_NAME/privkey.pem /etc/ssl/${CERT_NAME}_key.pem
 
 # Set appropriate permissions
-chmod 644 /etc/ssl/{{ item.domains | first }}_fullchain.pem
-chmod 644 /etc/ssl/{{ item.domains | first }}_key.pem
+chmod 644 /etc/ssl/${CERT_NAME}_fullchain.pem
+chmod 644 /etc/ssl/${CERT_NAME}_key.pem
 
-# Reload necessary services
-systemctl restart {{ item.reload_services | join(" ") }}
+log_message "Certificate files copied to /etc/ssl/"
+
+# Handle service restarts/reloads
+{% if item.services is defined and item.services | length > 0 %}
+{% set service_list = item.services %}
+{% elif item.reload_services is defined and item.reload_services | length > 0 %}
+{% set service_list = item.reload_services %}
+log_message "WARNING: 'reload_services' is deprecated, please use 'services' instead"
+{% endif %}
+
+{% if service_list is defined and service_list | length > 0 %}
+{% for service in service_list %}
+{% set service_config = service if service is mapping else {'name': service, 'action': 'restart'} %}
+SERVICE_NAME="{{ service_config.name if service_config.name is defined else service }}"
+SERVICE_ACTION="{{ service_config.action | default('restart') }}"
+
+# Check if service exists and is active
+if systemctl list-unit-files | grep -q "^$SERVICE_NAME.service"; then
+    log_message "Processing service: $SERVICE_NAME with action: $SERVICE_ACTION"
+    
+    case "$SERVICE_ACTION" in
+        "restart")
+            if systemctl is-active --quiet "$SERVICE_NAME"; then
+                systemctl restart "$SERVICE_NAME"
+                if [ $? -eq 0 ]; then
+                    log_message "Successfully restarted $SERVICE_NAME"
+                else
+                    log_message "ERROR: Failed to restart $SERVICE_NAME"
+                fi
+            else
+                log_message "Service $SERVICE_NAME is not running, starting it"
+                systemctl start "$SERVICE_NAME"
+            fi
+            ;;
+        "reload")
+            if systemctl is-active --quiet "$SERVICE_NAME"; then
+                systemctl reload "$SERVICE_NAME"
+                if [ $? -eq 0 ]; then
+                    log_message "Successfully reloaded $SERVICE_NAME"
+                else
+                    log_message "ERROR: Failed to reload $SERVICE_NAME, trying restart"
+                    systemctl restart "$SERVICE_NAME"
+                fi
+            else
+                log_message "Service $SERVICE_NAME is not running, cannot reload"
+            fi
+            ;;
+        "start")
+            systemctl start "$SERVICE_NAME"
+            log_message "Started service $SERVICE_NAME"
+            ;;
+        "stop")
+            systemctl stop "$SERVICE_NAME"
+            log_message "Stopped service $SERVICE_NAME"
+            ;;
+        *)
+            log_message "Unknown action $SERVICE_ACTION for service $SERVICE_NAME, defaulting to restart"
+            systemctl restart "$SERVICE_NAME"
+            ;;
+    esac
+else
+    log_message "WARNING: Service $SERVICE_NAME does not exist"
+fi
+
+{% endfor %}
+{% else %}
+log_message "No services configured for restart/reload"
+{% endif %}
 
 {% if certbot_renew_hook == "haproxy" %}
 # Check if the directory exists
