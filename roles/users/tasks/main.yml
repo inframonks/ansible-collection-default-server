@@ -160,6 +160,7 @@
   ansible.builtin.stat:
     path: /etc/msmtprc
   register: msmtprc_stat
+  tags: users
 
 - name: Copy /etc/msmtprc to users home directories
   ansible.builtin.copy:

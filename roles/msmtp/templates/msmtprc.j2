@@ -20,7 +20,7 @@ host {{ account.host }}
 {% if account.port is defined %}
 port {{ account.port }}
 {% endif %}
-from {{ ansible_hostname ~ '@' ~ ansible_domain if ansible_domain is defined and ansible_domain != '' else ansible_hostname }}
+from {{ account.from }}
 {% if account.user is defined %}
 user {{ account.user }}
 {% endif %}
