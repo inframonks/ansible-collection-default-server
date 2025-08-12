@@ -58,4 +58,3 @@ packages_defaults_nstall:
 packages_defaults_remove:
   - sendmail
   - ssmtp
-  - postfix
