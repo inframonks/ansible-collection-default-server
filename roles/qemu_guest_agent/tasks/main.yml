@@ -16,7 +16,6 @@
   ansible.builtin.package:
     name: "{{ qemu_guest_agent_packages }}"
     state: present
-  environment: "{{ proxy_env }}"
   when: not ansible_virtualization_type == 'lxc'
   become: true
   tags: qemu-guest-agent
